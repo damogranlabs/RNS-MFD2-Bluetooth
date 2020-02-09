@@ -1,0 +1,108 @@
+{
+    "env": {
+        "____________________USER_FIELDS_CAN_BE_MODIFIED____________________": "",
+        "user_cSources": [
+            "user/src/ring_buffer.c",
+            "user/src/uart_print.c",
+            "user/src/uart_print_user.c",
+            "user/src/uart_io.c",
+            "user/src/io.c",
+            "user/src/bt.c",
+            "user/src/timers.c",
+            "user/src/mfd_io.c"
+        ],
+        "user_asmSources": [],
+        "user_ldSources": [],
+        "user_cIncludes": [
+            "user/inc"
+        ],
+        "user_asmIncludes": [],
+        "user_ldIncludes": [],
+        "user_cDefines": [],
+        "user_asmDefines": [],
+        "user_cFlags": [],
+        "user_asmFlags": [],
+        "user_ldFlags": [],
+        "____________________DO_NOT_MODIFY_FIELDS_BELOW____________________": "",
+        "cubemx_sourceFiles": [
+            "Core/Src/main.c",
+            "Core/Src/gpio.c",
+            "Core/Src/spi.c",
+            "Core/Src/sys.c",
+            "Core/Src/tim.c",
+            "Core/Src/usart.c",
+            "Core/Src/stm32l1xx_it.c",
+            "Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_ll_rcc.c",
+            "Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_ll_utils.c",
+            "Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_ll_exti.c",
+            "Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_ll_gpio.c",
+            "Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_ll_spi.c",
+            "Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_ll_dma.c",
+            "Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_ll_pwr.c",
+            "Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_ll_tim.c",
+            "Drivers/STM32L1xx_HAL_Driver/Src/stm32l1xx_ll_usart.c",
+            "Core/Src/system_stm32l1xx.c",
+            "startup_stm32l100xc.s"
+        ],
+        "cubemx_includes": [
+            "Core/Inc",
+            "Drivers/STM32L1xx_HAL_Driver/Inc",
+            "Drivers/CMSIS/Device/ST/STM32L1xx/Include",
+            "Drivers/CMSIS/Include",
+            "Drivers/CMSIS/Include"
+        ],
+        "cubemx_defines": [
+            "USE_FULL_LL_DRIVER",
+            "USE_FULL_ASSERT=1U",
+            "HSE_VALUE=24000000",
+            "HSE_STARTUP_TIMEOUT=100",
+            "LSE_STARTUP_TIMEOUT=5000",
+            "LSE_VALUE=32768",
+            "MSI_VALUE=2097000",
+            "HSI_VALUE=16000000",
+            "LSI_VALUE=37000",
+            "VDD_VALUE=3300",
+            "PREFETCH_ENABLE=0",
+            "INSTRUCTION_CACHE_ENABLE=1",
+            "DATA_CACHE_ENABLE=1",
+            "STM32L100xC"
+        ],
+        "gccExePath": "C:/Users/domen/AppData/Roaming/GNU MCU Eclipse/ARM Embedded GCC/8.3.1-1.1/bin/arm-none-eabi-gcc.exe",
+        "gccIncludePath": "C:/Users/domen/AppData/Roaming/GNU MCU Eclipse/ARM Embedded GCC/8.3.1-1.1/lib/gcc/arm-none-eabi/8.3.1/include"
+    },
+    "configurations": [
+        {
+            "name": "cdcEmulatorSTM32L1",
+            "intelliSenseMode": "msvc-x64",
+            "includePath": [
+                "${workspaceFolder}",
+                "${cubemx_includes}",
+                "${gccIncludePath}",
+                "${user_cIncludes}",
+                "${user_asmIncludes}",
+                "${user_ldIncludes}"
+            ],
+            "browse": {
+                "path": [
+                    "${workspaceFolder}",
+                    "${cubemx_includes}",
+                    "${gccIncludePath}",
+                    "${user_cIncludes}",
+                    "${user_asmIncludes}",
+                    "${user_ldIncludes}"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "defines": [
+                "${cubemx_defines}",
+                "${user_cDefines}",
+                "${user_asmDefines}"
+            ],
+            "forcedInclude": [],
+            "compilerPath": "${gccExePath}",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}

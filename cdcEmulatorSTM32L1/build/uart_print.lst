@@ -1,0 +1,705 @@
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccDRXMav.s 			page 1
+
+
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"uart_print.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.printString,"ax",%progbits
+  16              		.align	1
+  17              		.global	printString
+  18              		.arch armv7-m
+  19              		.syntax unified
+  20              		.thumb
+  21              		.thumb_func
+  22              		.fpu softvfp
+  24              	printString:
+  25              	.LVL0:
+  26              	.LFB3:
+  27              		.file 1 "user/src/uart_print.c"
+   1:user/src/uart_print.c **** /**
+   2:user/src/uart_print.c ****  ******************************************************************************
+   3:user/src/uart_print.c ****  * File Name          : uart_print
+   4:user/src/uart_print.c ****  * Description        : This file provides simple intarface to send strings,
+   5:user/src/uart_print.c ****  * 											numbers over UART.
+   6:user/src/uart_print.c ****  * @date    07-Oct-2019
+   7:user/src/uart_print.c ****  * @author  Domen Jurkovic
+   8:user/src/uart_print.c ****  * @version v1.1
+   9:user/src/uart_print.c ****  *
+  10:user/src/uart_print.c ****  * Copyright (c) 2019, damogranlabs.com
+  11:user/src/uart_print.c ****  *
+  12:user/src/uart_print.c ****  * All rights reserved.
+  13:user/src/uart_print.c ****  * 
+  14:user/src/uart_print.c ****  * Redistribution and use in source and binary forms, with or without 
+  15:user/src/uart_print.c ****  * modification, are permitted provided that the following conditions are met:
+  16:user/src/uart_print.c ****  *
+  17:user/src/uart_print.c ****  * 1. Redistributions of source code must retain the above copyright notice, 
+  18:user/src/uart_print.c ****  *    this list of conditions and the following disclaimer.
+  19:user/src/uart_print.c ****  * 
+  20:user/src/uart_print.c ****  * 2. Redistributions in binary form must reproduce the above copyright notice,
+  21:user/src/uart_print.c ****  *    this list of conditions and the following disclaimer in the documentation
+  22:user/src/uart_print.c ****  *    and/or other materials provided with the distribution.
+  23:user/src/uart_print.c ****  *
+  24:user/src/uart_print.c ****  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+  25:user/src/uart_print.c ****  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+  26:user/src/uart_print.c ****  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+  27:user/src/uart_print.c ****  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE 
+  28:user/src/uart_print.c ****  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+  29:user/src/uart_print.c ****  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+  30:user/src/uart_print.c ****  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+  31:user/src/uart_print.c ****  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccDRXMav.s 			page 2
+
+
+  32:user/src/uart_print.c ****  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+  33:user/src/uart_print.c ****  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+  34:user/src/uart_print.c ****  * POSSIBILITY OF SUCH DAMAGE.
+  35:user/src/uart_print.c ****  *
+  36:user/src/uart_print.c ****  * @source  http://damogranlabs.com/
+  37:user/src/uart_print.c ****  *          https://github.com/damogranlabs
+  38:user/src/uart_print.c ****  * 
+  39:user/src/uart_print.c ****  * Follow the instructions in uart_print_user.h
+  40:user/src/uart_print.c ****  */
+  41:user/src/uart_print.c **** 
+  42:user/src/uart_print.c **** // private includes
+  43:user/src/uart_print.c **** #include <stdio.h>
+  44:user/src/uart_print.c **** #include <string.h>
+  45:user/src/uart_print.c **** #include <math.h>
+  46:user/src/uart_print.c **** 
+  47:user/src/uart_print.c **** #include "uart_print.h"
+  48:user/src/uart_print.c **** 
+  49:user/src/uart_print.c **** /****************************************************************************************/
+  50:user/src/uart_print.c **** /* PRINT/WRITE FUNCTIONS */
+  51:user/src/uart_print.c **** /****************************************************************************************/
+  52:user/src/uart_print.c **** /*
+  53:user/src/uart_print.c **** 	Send/print character/string. 
+  54:user/src/uart_print.c **** 	Printable data for viewing on terminal.
+  55:user/src/uart_print.c **** 	Call this function:		printString("test data");
+  56:user/src/uart_print.c **** 	Data must be string.
+  57:user/src/uart_print.c **** */
+  58:user/src/uart_print.c **** void printString(char *data)
+  59:user/src/uart_print.c **** {
+  28              		.loc 1 59 1 view -0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		.loc 1 59 1 is_stmt 0 view .LVU1
+  33 0000 10B5     		push	{r4, lr}
+  34              	.LCFI0:
+  35              		.cfi_def_cfa_offset 8
+  36              		.cfi_offset 4, -8
+  37              		.cfi_offset 14, -4
+  38 0002 0446     		mov	r4, r0
+  60:user/src/uart_print.c **** 	sendData((uint8_t *)data, (uint32_t)strlen(data));
+  39              		.loc 1 60 2 is_stmt 1 view .LVU2
+  40              		.loc 1 60 38 is_stmt 0 view .LVU3
+  41 0004 FFF7FEFF 		bl	strlen
+  42              	.LVL1:
+  43              		.loc 1 60 2 view .LVU4
+  44 0008 0146     		mov	r1, r0
+  45 000a 2046     		mov	r0, r4
+  46 000c FFF7FEFF 		bl	sendData
+  47              	.LVL2:
+  61:user/src/uart_print.c **** }
+  48              		.loc 1 61 1 view .LVU5
+  49 0010 10BD     		pop	{r4, pc}
+  50              		.loc 1 61 1 view .LVU6
+  51              		.cfi_endproc
+  52              	.LFE3:
+  54              		.section	.text.printLn,"ax",%progbits
+  55              		.align	1
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccDRXMav.s 			page 3
+
+
+  56              		.global	printLn
+  57              		.syntax unified
+  58              		.thumb
+  59              		.thumb_func
+  60              		.fpu softvfp
+  62              	printLn:
+  63              	.LFB7:
+  62:user/src/uart_print.c **** 
+  63:user/src/uart_print.c **** /*
+  64:user/src/uart_print.c **** 	Send/print unsigned or signed number. 
+  65:user/src/uart_print.c **** 	Printable data for viewing on terminal.
+  66:user/src/uart_print.c **** 	Call this function:		printNumber(number, DEC);		printNumber(2246, DEC);	
+  67:user/src/uart_print.c **** 	Base: DEC, HEX, OCT, BIN
+  68:user/src/uart_print.c **** 	Data must be number, int32_t.
+  69:user/src/uart_print.c **** */
+  70:user/src/uart_print.c **** void printNumber(int32_t number, uint8_t base)
+  71:user/src/uart_print.c **** {
+  72:user/src/uart_print.c **** 	if (number < 0)
+  73:user/src/uart_print.c **** 	{
+  74:user/src/uart_print.c **** 		printString("-");
+  75:user/src/uart_print.c **** 		number = -number;
+  76:user/src/uart_print.c **** 	}
+  77:user/src/uart_print.c **** 	printUnsignedNumber(number, base);
+  78:user/src/uart_print.c **** }
+  79:user/src/uart_print.c **** 
+  80:user/src/uart_print.c **** //print WITH new line and carriage return
+  81:user/src/uart_print.c **** void printStringLn(char *data)
+  82:user/src/uart_print.c **** {
+  83:user/src/uart_print.c **** 	printString(data);
+  84:user/src/uart_print.c **** 	printLn();
+  85:user/src/uart_print.c **** }
+  86:user/src/uart_print.c **** 
+  87:user/src/uart_print.c **** /*
+  88:user/src/uart_print.c **** 	Send/print unsigned or signed number. 
+  89:user/src/uart_print.c **** 	Printable data for viewing on terminal.
+  90:user/src/uart_print.c **** 	Call this function:		printNumber(number, DEC);		printNumber(2246, DEC);	
+  91:user/src/uart_print.c **** 	Base: DEC, HEX, OCT, BIN
+  92:user/src/uart_print.c **** 	Data must be number, int32_t.
+  93:user/src/uart_print.c **** */
+  94:user/src/uart_print.c **** void printNumberLn(int32_t number, uint8_t base)
+  95:user/src/uart_print.c **** {
+  96:user/src/uart_print.c **** 	printNumber(number, base);
+  97:user/src/uart_print.c **** 	printLn();
+  98:user/src/uart_print.c **** }
+  99:user/src/uart_print.c **** 
+ 100:user/src/uart_print.c **** void printLn()
+ 101:user/src/uart_print.c **** {
+  64              		.loc 1 101 1 is_stmt 1 view -0
+  65              		.cfi_startproc
+  66              		@ args = 0, pretend = 0, frame = 0
+  67              		@ frame_needed = 0, uses_anonymous_args = 0
+  68 0000 08B5     		push	{r3, lr}
+  69              	.LCFI1:
+  70              		.cfi_def_cfa_offset 8
+  71              		.cfi_offset 3, -8
+  72              		.cfi_offset 14, -4
+ 102:user/src/uart_print.c **** 	printString("\r\n");
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccDRXMav.s 			page 4
+
+
+  73              		.loc 1 102 2 view .LVU8
+  74 0002 0248     		ldr	r0, .L5
+  75 0004 FFF7FEFF 		bl	printString
+  76              	.LVL3:
+ 103:user/src/uart_print.c **** }
+  77              		.loc 1 103 1 is_stmt 0 view .LVU9
+  78 0008 08BD     		pop	{r3, pc}
+  79              	.L6:
+  80 000a 00BF     		.align	2
+  81              	.L5:
+  82 000c 00000000 		.word	.LC0
+  83              		.cfi_endproc
+  84              	.LFE7:
+  86              		.section	.text.printStringLn,"ax",%progbits
+  87              		.align	1
+  88              		.global	printStringLn
+  89              		.syntax unified
+  90              		.thumb
+  91              		.thumb_func
+  92              		.fpu softvfp
+  94              	printStringLn:
+  95              	.LVL4:
+  96              	.LFB5:
+  82:user/src/uart_print.c **** 	printString(data);
+  97              		.loc 1 82 1 is_stmt 1 view -0
+  98              		.cfi_startproc
+  99              		@ args = 0, pretend = 0, frame = 0
+ 100              		@ frame_needed = 0, uses_anonymous_args = 0
+  82:user/src/uart_print.c **** 	printString(data);
+ 101              		.loc 1 82 1 is_stmt 0 view .LVU11
+ 102 0000 08B5     		push	{r3, lr}
+ 103              	.LCFI2:
+ 104              		.cfi_def_cfa_offset 8
+ 105              		.cfi_offset 3, -8
+ 106              		.cfi_offset 14, -4
+  83:user/src/uart_print.c **** 	printLn();
+ 107              		.loc 1 83 2 is_stmt 1 view .LVU12
+ 108 0002 FFF7FEFF 		bl	printString
+ 109              	.LVL5:
+  84:user/src/uart_print.c **** }
+ 110              		.loc 1 84 2 view .LVU13
+ 111 0006 FFF7FEFF 		bl	printLn
+ 112              	.LVL6:
+  85:user/src/uart_print.c **** 
+ 113              		.loc 1 85 1 is_stmt 0 view .LVU14
+ 114 000a 08BD     		pop	{r3, pc}
+ 115              		.cfi_endproc
+ 116              	.LFE5:
+ 118              		.section	.text.writeData,"ax",%progbits
+ 119              		.align	1
+ 120              		.global	writeData
+ 121              		.syntax unified
+ 122              		.thumb
+ 123              		.thumb_func
+ 124              		.fpu softvfp
+ 126              	writeData:
+ 127              	.LVL7:
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccDRXMav.s 			page 5
+
+
+ 128              	.LFB8:
+ 104:user/src/uart_print.c **** 
+ 105:user/src/uart_print.c **** /*
+ 106:user/src/uart_print.c **** 	Send raw data. 
+ 107:user/src/uart_print.c **** 	Not "printable" data.
+ 108:user/src/uart_print.c **** 	Call this function:		writeData(&data, sizeof(data));
+ 109:user/src/uart_print.c **** 	Data can be any type.
+ 110:user/src/uart_print.c **** */
+ 111:user/src/uart_print.c **** void writeData(uint8_t *data, uint8_t dataSize)
+ 112:user/src/uart_print.c **** {
+ 129              		.loc 1 112 1 is_stmt 1 view -0
+ 130              		.cfi_startproc
+ 131              		@ args = 0, pretend = 0, frame = 0
+ 132              		@ frame_needed = 0, uses_anonymous_args = 0
+ 133              		.loc 1 112 1 is_stmt 0 view .LVU16
+ 134 0000 08B5     		push	{r3, lr}
+ 135              	.LCFI3:
+ 136              		.cfi_def_cfa_offset 8
+ 137              		.cfi_offset 3, -8
+ 138              		.cfi_offset 14, -4
+ 113:user/src/uart_print.c **** 	sendData((uint8_t *)data, (uint32_t)dataSize);
+ 139              		.loc 1 113 2 is_stmt 1 view .LVU17
+ 140 0002 FFF7FEFF 		bl	sendData
+ 141              	.LVL8:
+ 114:user/src/uart_print.c **** }
+ 142              		.loc 1 114 1 is_stmt 0 view .LVU18
+ 143 0006 08BD     		pop	{r3, pc}
+ 144              		.cfi_endproc
+ 145              	.LFE8:
+ 147              		.section	.text.printUnsignedNumber,"ax",%progbits
+ 148              		.align	1
+ 149              		.global	printUnsignedNumber
+ 150              		.syntax unified
+ 151              		.thumb
+ 152              		.thumb_func
+ 153              		.fpu softvfp
+ 155              	printUnsignedNumber:
+ 156              	.LVL9:
+ 157              	.LFB9:
+ 115:user/src/uart_print.c **** 
+ 116:user/src/uart_print.c **** /*
+ 117:user/src/uart_print.c **** 	This is "private" function. It is used by other functions like: printNumber(int32_t number, uint8_
+ 118:user/src/uart_print.c **** 	However, it can be used by user.
+ 119:user/src/uart_print.c **** 	Send/print unsigned number. 
+ 120:user/src/uart_print.c **** 	Printable data for viewing on terminal.
+ 121:user/src/uart_print.c **** 	Call this function:		printUnsignedNumber(number, DEC);		printUnsignedNumber(2246, DEC);	
+ 122:user/src/uart_print.c **** 	Base: DEC, HEX, OCT, BIN
+ 123:user/src/uart_print.c **** 	Data must be number, int32_t.
+ 124:user/src/uart_print.c **** */
+ 125:user/src/uart_print.c **** void printUnsignedNumber(uint32_t n, uint8_t base)
+ 126:user/src/uart_print.c **** {
+ 158              		.loc 1 126 1 is_stmt 1 view -0
+ 159              		.cfi_startproc
+ 160              		@ args = 0, pretend = 0, frame = 40
+ 161              		@ frame_needed = 0, uses_anonymous_args = 0
+ 162              		.loc 1 126 1 is_stmt 0 view .LVU20
+ 163 0000 70B5     		push	{r4, r5, r6, lr}
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccDRXMav.s 			page 6
+
+
+ 164              	.LCFI4:
+ 165              		.cfi_def_cfa_offset 16
+ 166              		.cfi_offset 4, -16
+ 167              		.cfi_offset 5, -12
+ 168              		.cfi_offset 6, -8
+ 169              		.cfi_offset 14, -4
+ 170 0002 8AB0     		sub	sp, sp, #40
+ 171              	.LCFI5:
+ 172              		.cfi_def_cfa_offset 56
+ 173 0004 0246     		mov	r2, r0
+ 127:user/src/uart_print.c **** 	char buf[8 * sizeof(long) + 1]; // Assumes 8-bit chars plus zero byte.
+ 174              		.loc 1 127 2 is_stmt 1 view .LVU21
+ 128:user/src/uart_print.c **** 	char *str = &buf[sizeof(buf) - 1];
+ 175              		.loc 1 128 2 view .LVU22
+ 176              	.LVL10:
+ 129:user/src/uart_print.c **** 	unsigned long m;
+ 177              		.loc 1 129 2 view .LVU23
+ 130:user/src/uart_print.c **** 	char c;
+ 178              		.loc 1 130 2 view .LVU24
+ 131:user/src/uart_print.c **** 	*str = '\0';
+ 179              		.loc 1 131 2 view .LVU25
+ 180              		.loc 1 131 7 is_stmt 0 view .LVU26
+ 181 0006 0023     		movs	r3, #0
+ 182 0008 8DF82430 		strb	r3, [sp, #36]
+ 132:user/src/uart_print.c **** 
+ 133:user/src/uart_print.c **** 	//prevent crash if called with base == 1
+ 134:user/src/uart_print.c **** 	if (base < 2)
+ 183              		.loc 1 134 2 is_stmt 1 view .LVU27
+ 184              		.loc 1 134 5 is_stmt 0 view .LVU28
+ 185 000c 0129     		cmp	r1, #1
+ 186 000e 01D9     		bls	.L19
+ 187              	.LVL11:
+ 188              	.L12:
+ 135:user/src/uart_print.c **** 		base = 10;
+ 189              		.loc 1 135 8 view .LVU29
+ 190 0010 09A8     		add	r0, sp, #36
+ 191              	.LVL12:
+ 192              		.loc 1 135 8 view .LVU30
+ 193 0012 08E0     		b	.L15
+ 194              	.LVL13:
+ 195              	.L19:
+ 196              		.loc 1 135 8 view .LVU31
+ 197 0014 0A21     		movs	r1, #10
+ 198              	.LVL14:
+ 199              		.loc 1 135 8 view .LVU32
+ 200 0016 FBE7     		b	.L12
+ 201              	.LVL15:
+ 202              	.L13:
+ 136:user/src/uart_print.c **** 
+ 137:user/src/uart_print.c **** 	do
+ 138:user/src/uart_print.c **** 	{
+ 139:user/src/uart_print.c **** 		m = n;
+ 140:user/src/uart_print.c **** 		n /= base;
+ 141:user/src/uart_print.c **** 		c = m - base * n;
+ 142:user/src/uart_print.c **** 		*--str = c < 10 ? c + '0' : c + 'A' - 10;
+ 203              		.loc 1 142 10 discriminator 2 view .LVU33
+ 204 0018 3733     		adds	r3, r3, #55
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccDRXMav.s 			page 7
+
+
+ 205              	.LVL16:
+ 206              		.loc 1 142 10 discriminator 2 view .LVU34
+ 207 001a DBB2     		uxtb	r3, r3
+ 208              	.LVL17:
+ 209              	.L14:
+ 210              		.loc 1 142 10 discriminator 4 view .LVU35
+ 211 001c 00F8013D 		strb	r3, [r0, #-1]!
+ 212              	.LVL18:
+ 143:user/src/uart_print.c **** 	} while (n);
+ 213              		.loc 1 143 2 discriminator 4 view .LVU36
+ 214 0020 9642     		cmp	r6, r2
+ 215 0022 0ED8     		bhi	.L20
+ 140:user/src/uart_print.c **** 		c = m - base * n;
+ 216              		.loc 1 140 5 view .LVU37
+ 217 0024 2A46     		mov	r2, r5
+ 218              	.LVL19:
+ 219              	.L15:
+ 137:user/src/uart_print.c **** 	{
+ 220              		.loc 1 137 2 is_stmt 1 view .LVU38
+ 139:user/src/uart_print.c **** 		n /= base;
+ 221              		.loc 1 139 3 view .LVU39
+ 140:user/src/uart_print.c **** 		c = m - base * n;
+ 222              		.loc 1 140 3 view .LVU40
+ 140:user/src/uart_print.c **** 		c = m - base * n;
+ 223              		.loc 1 140 5 is_stmt 0 view .LVU41
+ 224 0026 0E46     		mov	r6, r1
+ 225 0028 B2FBF1F5 		udiv	r5, r2, r1
+ 226              	.LVL20:
+ 141:user/src/uart_print.c **** 		*--str = c < 10 ? c + '0' : c + 'A' - 10;
+ 227              		.loc 1 141 3 is_stmt 1 view .LVU42
+ 141:user/src/uart_print.c **** 		*--str = c < 10 ? c + '0' : c + 'A' - 10;
+ 228              		.loc 1 141 9 is_stmt 0 view .LVU43
+ 229 002c D3B2     		uxtb	r3, r2
+ 230 002e 05FB01F4 		mul	r4, r5, r1
+ 231 0032 E4B2     		uxtb	r4, r4
+ 141:user/src/uart_print.c **** 		*--str = c < 10 ? c + '0' : c + 'A' - 10;
+ 232              		.loc 1 141 5 view .LVU44
+ 233 0034 1B1B     		subs	r3, r3, r4
+ 234 0036 DBB2     		uxtb	r3, r3
+ 235              	.LVL21:
+ 142:user/src/uart_print.c **** 	} while (n);
+ 236              		.loc 1 142 3 is_stmt 1 view .LVU45
+ 142:user/src/uart_print.c **** 	} while (n);
+ 237              		.loc 1 142 10 is_stmt 0 view .LVU46
+ 238 0038 092B     		cmp	r3, #9
+ 239 003a EDD8     		bhi	.L13
+ 142:user/src/uart_print.c **** 	} while (n);
+ 240              		.loc 1 142 10 discriminator 1 view .LVU47
+ 241 003c 3033     		adds	r3, r3, #48
+ 242              	.LVL22:
+ 142:user/src/uart_print.c **** 	} while (n);
+ 243              		.loc 1 142 10 discriminator 1 view .LVU48
+ 244 003e DBB2     		uxtb	r3, r3
+ 245              	.LVL23:
+ 142:user/src/uart_print.c **** 	} while (n);
+ 246              		.loc 1 142 10 discriminator 1 view .LVU49
+ 247 0040 ECE7     		b	.L14
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccDRXMav.s 			page 8
+
+
+ 248              	.LVL24:
+ 249              	.L20:
+ 144:user/src/uart_print.c **** 
+ 145:user/src/uart_print.c **** 	printString(str);
+ 250              		.loc 1 145 2 is_stmt 1 view .LVU50
+ 251 0042 FFF7FEFF 		bl	printString
+ 252              	.LVL25:
+ 146:user/src/uart_print.c **** }
+ 253              		.loc 1 146 1 is_stmt 0 view .LVU51
+ 254 0046 0AB0     		add	sp, sp, #40
+ 255              	.LCFI6:
+ 256              		.cfi_def_cfa_offset 16
+ 257              		@ sp needed
+ 258 0048 70BD     		pop	{r4, r5, r6, pc}
+ 259              		.loc 1 146 1 view .LVU52
+ 260              		.cfi_endproc
+ 261              	.LFE9:
+ 263              		.section	.text.printNumber,"ax",%progbits
+ 264              		.align	1
+ 265              		.global	printNumber
+ 266              		.syntax unified
+ 267              		.thumb
+ 268              		.thumb_func
+ 269              		.fpu softvfp
+ 271              	printNumber:
+ 272              	.LVL26:
+ 273              	.LFB4:
+  71:user/src/uart_print.c **** 	if (number < 0)
+ 274              		.loc 1 71 1 is_stmt 1 view -0
+ 275              		.cfi_startproc
+ 276              		@ args = 0, pretend = 0, frame = 0
+ 277              		@ frame_needed = 0, uses_anonymous_args = 0
+  71:user/src/uart_print.c **** 	if (number < 0)
+ 278              		.loc 1 71 1 is_stmt 0 view .LVU54
+ 279 0000 38B5     		push	{r3, r4, r5, lr}
+ 280              	.LCFI7:
+ 281              		.cfi_def_cfa_offset 16
+ 282              		.cfi_offset 3, -16
+ 283              		.cfi_offset 4, -12
+ 284              		.cfi_offset 5, -8
+ 285              		.cfi_offset 14, -4
+ 286 0002 0D46     		mov	r5, r1
+  72:user/src/uart_print.c **** 	{
+ 287              		.loc 1 72 2 is_stmt 1 view .LVU55
+  72:user/src/uart_print.c **** 	{
+ 288              		.loc 1 72 5 is_stmt 0 view .LVU56
+ 289 0004 041E     		subs	r4, r0, #0
+ 290 0006 04DB     		blt	.L24
+ 291              	.LVL27:
+ 292              	.L22:
+  77:user/src/uart_print.c **** }
+ 293              		.loc 1 77 2 is_stmt 1 view .LVU57
+ 294 0008 2946     		mov	r1, r5
+ 295 000a 2046     		mov	r0, r4
+ 296 000c FFF7FEFF 		bl	printUnsignedNumber
+ 297              	.LVL28:
+  78:user/src/uart_print.c **** 
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccDRXMav.s 			page 9
+
+
+ 298              		.loc 1 78 1 is_stmt 0 view .LVU58
+ 299 0010 38BD     		pop	{r3, r4, r5, pc}
+ 300              	.LVL29:
+ 301              	.L24:
+  74:user/src/uart_print.c **** 		number = -number;
+ 302              		.loc 1 74 3 is_stmt 1 view .LVU59
+ 303 0012 0248     		ldr	r0, .L25
+ 304              	.LVL30:
+  74:user/src/uart_print.c **** 		number = -number;
+ 305              		.loc 1 74 3 is_stmt 0 view .LVU60
+ 306 0014 FFF7FEFF 		bl	printString
+ 307              	.LVL31:
+  75:user/src/uart_print.c **** 	}
+ 308              		.loc 1 75 3 is_stmt 1 view .LVU61
+  75:user/src/uart_print.c **** 	}
+ 309              		.loc 1 75 10 is_stmt 0 view .LVU62
+ 310 0018 6442     		rsbs	r4, r4, #0
+ 311              	.LVL32:
+  75:user/src/uart_print.c **** 	}
+ 312              		.loc 1 75 10 view .LVU63
+ 313 001a F5E7     		b	.L22
+ 314              	.L26:
+ 315              		.align	2
+ 316              	.L25:
+ 317 001c 00000000 		.word	.LC1
+ 318              		.cfi_endproc
+ 319              	.LFE4:
+ 321              		.section	.text.printNumberLn,"ax",%progbits
+ 322              		.align	1
+ 323              		.global	printNumberLn
+ 324              		.syntax unified
+ 325              		.thumb
+ 326              		.thumb_func
+ 327              		.fpu softvfp
+ 329              	printNumberLn:
+ 330              	.LVL33:
+ 331              	.LFB6:
+  95:user/src/uart_print.c **** 	printNumber(number, base);
+ 332              		.loc 1 95 1 is_stmt 1 view -0
+ 333              		.cfi_startproc
+ 334              		@ args = 0, pretend = 0, frame = 0
+ 335              		@ frame_needed = 0, uses_anonymous_args = 0
+  95:user/src/uart_print.c **** 	printNumber(number, base);
+ 336              		.loc 1 95 1 is_stmt 0 view .LVU65
+ 337 0000 08B5     		push	{r3, lr}
+ 338              	.LCFI8:
+ 339              		.cfi_def_cfa_offset 8
+ 340              		.cfi_offset 3, -8
+ 341              		.cfi_offset 14, -4
+  96:user/src/uart_print.c **** 	printLn();
+ 342              		.loc 1 96 2 is_stmt 1 view .LVU66
+ 343 0002 FFF7FEFF 		bl	printNumber
+ 344              	.LVL34:
+  97:user/src/uart_print.c **** }
+ 345              		.loc 1 97 2 view .LVU67
+ 346 0006 FFF7FEFF 		bl	printLn
+ 347              	.LVL35:
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccDRXMav.s 			page 10
+
+
+  98:user/src/uart_print.c **** 
+ 348              		.loc 1 98 1 is_stmt 0 view .LVU68
+ 349 000a 08BD     		pop	{r3, pc}
+ 350              		.cfi_endproc
+ 351              	.LFE6:
+ 353              		.section	.text.printFloat,"ax",%progbits
+ 354              		.align	1
+ 355              		.global	printFloat
+ 356              		.syntax unified
+ 357              		.thumb
+ 358              		.thumb_func
+ 359              		.fpu softvfp
+ 361              	printFloat:
+ 362              	.LVL36:
+ 363              	.LFB10:
+ 147:user/src/uart_print.c **** 
+ 148:user/src/uart_print.c **** // pay attention on "double" type range
+ 149:user/src/uart_print.c **** // ? - max 6 digits after decimal point?
+ 150:user/src/uart_print.c **** void printFloat(double number)
+ 151:user/src/uart_print.c **** {
+ 364              		.loc 1 151 1 is_stmt 1 view -0
+ 365              		.cfi_startproc
+ 366              		@ args = 0, pretend = 0, frame = 24
+ 367              		@ frame_needed = 0, uses_anonymous_args = 0
+ 368              		.loc 1 151 1 is_stmt 0 view .LVU70
+ 369 0000 00B5     		push	{lr}
+ 370              	.LCFI9:
+ 371              		.cfi_def_cfa_offset 4
+ 372              		.cfi_offset 14, -4
+ 373 0002 87B0     		sub	sp, sp, #28
+ 374              	.LCFI10:
+ 375              		.cfi_def_cfa_offset 32
+ 152:user/src/uart_print.c **** 	char float_as_string[20];
+ 376              		.loc 1 152 2 is_stmt 1 view .LVU71
+ 153:user/src/uart_print.c **** 	sprintf(float_as_string, "%f", number);
+ 377              		.loc 1 153 2 view .LVU72
+ 378 0004 0246     		mov	r2, r0
+ 379 0006 0B46     		mov	r3, r1
+ 380 0008 0449     		ldr	r1, .L31
+ 381 000a 01A8     		add	r0, sp, #4
+ 382              	.LVL37:
+ 383              		.loc 1 153 2 is_stmt 0 view .LVU73
+ 384 000c FFF7FEFF 		bl	sprintf
+ 385              	.LVL38:
+ 154:user/src/uart_print.c **** 	printString(float_as_string);
+ 386              		.loc 1 154 2 is_stmt 1 view .LVU74
+ 387 0010 01A8     		add	r0, sp, #4
+ 388 0012 FFF7FEFF 		bl	printString
+ 389              	.LVL39:
+ 155:user/src/uart_print.c **** }
+ 390              		.loc 1 155 1 is_stmt 0 view .LVU75
+ 391 0016 07B0     		add	sp, sp, #28
+ 392              	.LCFI11:
+ 393              		.cfi_def_cfa_offset 4
+ 394              		@ sp needed
+ 395 0018 5DF804FB 		ldr	pc, [sp], #4
+ 396              	.L32:
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccDRXMav.s 			page 11
+
+
+ 397              		.align	2
+ 398              	.L31:
+ 399 001c 00000000 		.word	.LC2
+ 400              		.cfi_endproc
+ 401              	.LFE10:
+ 403              		.section	.text.printFloatLn,"ax",%progbits
+ 404              		.align	1
+ 405              		.global	printFloatLn
+ 406              		.syntax unified
+ 407              		.thumb
+ 408              		.thumb_func
+ 409              		.fpu softvfp
+ 411              	printFloatLn:
+ 412              	.LVL40:
+ 413              	.LFB11:
+ 156:user/src/uart_print.c **** 
+ 157:user/src/uart_print.c **** void printFloatLn(double number)
+ 158:user/src/uart_print.c **** {
+ 414              		.loc 1 158 1 is_stmt 1 view -0
+ 415              		.cfi_startproc
+ 416              		@ args = 0, pretend = 0, frame = 0
+ 417              		@ frame_needed = 0, uses_anonymous_args = 0
+ 418              		.loc 1 158 1 is_stmt 0 view .LVU77
+ 419 0000 08B5     		push	{r3, lr}
+ 420              	.LCFI12:
+ 421              		.cfi_def_cfa_offset 8
+ 422              		.cfi_offset 3, -8
+ 423              		.cfi_offset 14, -4
+ 159:user/src/uart_print.c **** 	printFloat(number);
+ 424              		.loc 1 159 2 is_stmt 1 view .LVU78
+ 425 0002 FFF7FEFF 		bl	printFloat
+ 426              	.LVL41:
+ 160:user/src/uart_print.c **** 	printLn();
+ 427              		.loc 1 160 2 view .LVU79
+ 428 0006 FFF7FEFF 		bl	printLn
+ 429              	.LVL42:
+ 161:user/src/uart_print.c **** }
+ 430              		.loc 1 161 1 is_stmt 0 view .LVU80
+ 431 000a 08BD     		pop	{r3, pc}
+ 432              		.cfi_endproc
+ 433              	.LFE11:
+ 435              		.section	.rodata.printFloat.str1.4,"aMS",%progbits,1
+ 436              		.align	2
+ 437              	.LC2:
+ 438 0000 256600   		.ascii	"%f\000"
+ 439              		.section	.rodata.printLn.str1.4,"aMS",%progbits,1
+ 440              		.align	2
+ 441              	.LC0:
+ 442 0000 0D0A00   		.ascii	"\015\012\000"
+ 443              		.section	.rodata.printNumber.str1.4,"aMS",%progbits,1
+ 444              		.align	2
+ 445              	.LC1:
+ 446 0000 2D00     		.ascii	"-\000"
+ 447              		.text
+ 448              	.Letext0:
+ 449              		.file 2 "c:\\users\\domen\\appdata\\roaming\\gnu mcu eclipse\\arm embedded gcc\\8.3.1-1.1\\arm-non
+ 450              		.file 3 "c:\\users\\domen\\appdata\\roaming\\gnu mcu eclipse\\arm embedded gcc\\8.3.1-1.1\\lib\\gc
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccDRXMav.s 			page 12
+
+
+ 451              		.file 4 "c:\\users\\domen\\appdata\\roaming\\gnu mcu eclipse\\arm embedded gcc\\8.3.1-1.1\\arm-non
+ 452              		.file 5 "c:\\users\\domen\\appdata\\roaming\\gnu mcu eclipse\\arm embedded gcc\\8.3.1-1.1\\arm-non
+ 453              		.file 6 "c:\\users\\domen\\appdata\\roaming\\gnu mcu eclipse\\arm embedded gcc\\8.3.1-1.1\\arm-non
+ 454              		.file 7 "c:\\users\\domen\\appdata\\roaming\\gnu mcu eclipse\\arm embedded gcc\\8.3.1-1.1\\arm-non
+ 455              		.file 8 "c:\\users\\domen\\appdata\\roaming\\gnu mcu eclipse\\arm embedded gcc\\8.3.1-1.1\\arm-non
+ 456              		.file 9 "c:\\users\\domen\\appdata\\roaming\\gnu mcu eclipse\\arm embedded gcc\\8.3.1-1.1\\arm-non
+ 457              		.file 10 "user/inc/uart_print.h"
+ 458              		.file 11 "c:\\users\\domen\\appdata\\roaming\\gnu mcu eclipse\\arm embedded gcc\\8.3.1-1.1\\arm-no
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccDRXMav.s 			page 13
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 uart_print.c
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:16     .text.printString:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:24     .text.printString:0000000000000000 printString
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:55     .text.printLn:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:62     .text.printLn:0000000000000000 printLn
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:82     .text.printLn:000000000000000c $d
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:87     .text.printStringLn:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:94     .text.printStringLn:0000000000000000 printStringLn
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:119    .text.writeData:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:126    .text.writeData:0000000000000000 writeData
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:148    .text.printUnsignedNumber:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:155    .text.printUnsignedNumber:0000000000000000 printUnsignedNumber
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:264    .text.printNumber:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:271    .text.printNumber:0000000000000000 printNumber
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:317    .text.printNumber:000000000000001c $d
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:322    .text.printNumberLn:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:329    .text.printNumberLn:0000000000000000 printNumberLn
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:354    .text.printFloat:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:361    .text.printFloat:0000000000000000 printFloat
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:399    .text.printFloat:000000000000001c $d
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:404    .text.printFloatLn:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:411    .text.printFloatLn:0000000000000000 printFloatLn
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:436    .rodata.printFloat.str1.4:0000000000000000 $d
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:440    .rodata.printLn.str1.4:0000000000000000 $d
+C:\Users\domen\AppData\Local\Temp\ccDRXMav.s:444    .rodata.printNumber.str1.4:0000000000000000 $d
+
+UNDEFINED SYMBOLS
+strlen
+sendData
+sprintf

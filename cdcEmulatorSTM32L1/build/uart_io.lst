@@ -1,0 +1,777 @@
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s 			page 1
+
+
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"uart_io.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.handleLedActions,"ax",%progbits
+  16              		.align	1
+  17              		.global	handleLedActions
+  18              		.arch armv7-m
+  19              		.syntax unified
+  20              		.thumb
+  21              		.thumb_func
+  22              		.fpu softvfp
+  24              	handleLedActions:
+  25              	.LVL0:
+  26              	.LFB833:
+  27              		.file 1 "user/src/uart_io.c"
+   1:user/src/uart_io.c **** /**
+   2:user/src/uart_io.c ****   ******************************************************************************
+   3:user/src/uart_io.c ****   * @file           : uart_io.c
+   4:user/src/uart_io.c ****   * @brief          : Interface between STM32 and PC over UART
+   5:user/src/uart_io.c ****   ******************************************************************************
+   6:user/src/uart_io.c ****   */
+   7:user/src/uart_io.c **** 
+   8:user/src/uart_io.c **** /* Includes ------------------------------------------------------------------*/
+   9:user/src/uart_io.c **** #include <stdbool.h>
+  10:user/src/uart_io.c **** 
+  11:user/src/uart_io.c **** #include "main.h"
+  12:user/src/uart_io.c **** 
+  13:user/src/uart_io.c **** /* Private includes ----------------------------------------------------------*/
+  14:user/src/uart_io.c **** #include "uart_print.h"
+  15:user/src/uart_io.c **** 
+  16:user/src/uart_io.c **** #include "uart_io.h"
+  17:user/src/uart_io.c **** #include "io.h"
+  18:user/src/uart_io.c **** 
+  19:user/src/uart_io.c **** #include "mfd_io.h"
+  20:user/src/uart_io.c **** 
+  21:user/src/uart_io.c **** /* Private typedef -----------------------------------------------------------*/
+  22:user/src/uart_io.c **** /* Private define ------------------------------------------------------------*/
+  23:user/src/uart_io.c **** /* Private macro -------------------------------------------------------------*/
+  24:user/src/uart_io.c **** /* Private variables ---------------------------------------------------------*/
+  25:user/src/uart_io.c **** extern volatile rb_att_t uartRxBuff;
+  26:user/src/uart_io.c **** 
+  27:user/src/uart_io.c **** extern rb_att_t mosiBuff;
+  28:user/src/uart_io.c **** 
+  29:user/src/uart_io.c **** /* Private function prototypes -----------------------------------------------*/
+  30:user/src/uart_io.c **** void handleLedActions(uint8_t *data);
+  31:user/src/uart_io.c **** void handleUartMfdActions(uint8_t *data);
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s 			page 2
+
+
+  32:user/src/uart_io.c **** 
+  33:user/src/uart_io.c **** void uartRxDataHandler(void)
+  34:user/src/uart_io.c **** {
+  35:user/src/uart_io.c **** 	// handle UART received data
+  36:user/src/uart_io.c **** 	uint8_t numberOfBytes = 0;
+  37:user/src/uart_io.c **** 	uint8_t data[UCMD_RX_DATA_SIZE];
+  38:user/src/uart_io.c **** 
+  39:user/src/uart_io.c **** 	numberOfBytes = ring_buffer_size(&uartRxBuff);
+  40:user/src/uart_io.c **** 	if (numberOfBytes < UCMD_RX_DATA_SIZE)
+  41:user/src/uart_io.c **** 	{
+  42:user/src/uart_io.c **** 		return;
+  43:user/src/uart_io.c **** 	}
+  44:user/src/uart_io.c **** 
+  45:user/src/uart_io.c **** 	if (ring_buffer_get(&uartRxBuff, data, UCMD_RX_DATA_SIZE) == RB_OK)
+  46:user/src/uart_io.c **** 	{
+  47:user/src/uart_io.c **** 		printString("CMD: ");
+  48:user/src/uart_io.c **** 		writeData(data, numberOfBytes);
+  49:user/src/uart_io.c **** 
+  50:user/src/uart_io.c **** 		switch (data[0])
+  51:user/src/uart_io.c **** 		{
+  52:user/src/uart_io.c **** 		case UCMD_CTRL_LED_TOGGLE:
+  53:user/src/uart_io.c **** 			handleLedActions(data + 1);
+  54:user/src/uart_io.c **** 			break;
+  55:user/src/uart_io.c **** 
+  56:user/src/uart_io.c **** 		case UCMD_MFD_ACTION:
+  57:user/src/uart_io.c **** 			handleUartMfdActions(data + 1);
+  58:user/src/uart_io.c **** 			break;
+  59:user/src/uart_io.c **** 
+  60:user/src/uart_io.c **** 		case UCMD_TEST:
+  61:user/src/uart_io.c **** 			ring_buffer_put(&mosiBuff, &data[1], 1);
+  62:user/src/uart_io.c **** 			//if (data[1] == UCMD_TEST_SEND_SPI_BYTE)
+  63:user/src/uart_io.c **** 			//{
+  64:user/src/uart_io.c **** 			//	//sendCommand(data[2]);
+  65:user/src/uart_io.c **** 			//}
+  66:user/src/uart_io.c **** 			break;
+  67:user/src/uart_io.c **** 
+  68:user/src/uart_io.c **** 		default:
+  69:user/src/uart_io.c **** 			// TODO: report error
+  70:user/src/uart_io.c **** 			printStringLn("!!! Invalid received command");
+  71:user/src/uart_io.c **** 			ring_buffer_flush(&uartRxBuff);
+  72:user/src/uart_io.c **** 			break;
+  73:user/src/uart_io.c **** 		}
+  74:user/src/uart_io.c **** 	}
+  75:user/src/uart_io.c **** 	else
+  76:user/src/uart_io.c **** 	{
+  77:user/src/uart_io.c **** 		// TODO: report error
+  78:user/src/uart_io.c **** 		ctrlErrorLed(true);
+  79:user/src/uart_io.c **** 	}
+  80:user/src/uart_io.c **** }
+  81:user/src/uart_io.c **** 
+  82:user/src/uart_io.c **** void handleLedActions(uint8_t *data)
+  83:user/src/uart_io.c **** {
+  28              		.loc 1 83 1 view -0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		.loc 1 83 1 is_stmt 0 view .LVU1
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s 			page 3
+
+
+  33 0000 10B5     		push	{r4, lr}
+  34              	.LCFI0:
+  35              		.cfi_def_cfa_offset 8
+  36              		.cfi_offset 4, -8
+  37              		.cfi_offset 14, -4
+  84:user/src/uart_io.c **** 	switch (data[0])
+  38              		.loc 1 84 2 is_stmt 1 view .LVU2
+  39              		.loc 1 84 14 is_stmt 0 view .LVU3
+  40 0002 0378     		ldrb	r3, [r0]	@ zero_extendqisi2
+  41              		.loc 1 84 2 view .LVU4
+  42 0004 672B     		cmp	r3, #103
+  43 0006 0FD0     		beq	.L2
+  44 0008 0446     		mov	r4, r0
+  45 000a 722B     		cmp	r3, #114
+  46 000c 09D0     		beq	.L3
+  47 000e 622B     		cmp	r3, #98
+  48 0010 0DD0     		beq	.L9
+  85:user/src/uart_io.c **** 	{
+  86:user/src/uart_io.c **** 	case UCMD_CTRL_LED_TOGGLE_RED:
+  87:user/src/uart_io.c **** 		toggleErrorLed();
+  88:user/src/uart_io.c **** 		break;
+  89:user/src/uart_io.c **** 
+  90:user/src/uart_io.c **** 	case UCMD_CTRL_LED_TOGGLE_GREEN:
+  91:user/src/uart_io.c **** 		toggleGreenLed();
+  92:user/src/uart_io.c **** 		break;
+  93:user/src/uart_io.c **** 
+  94:user/src/uart_io.c **** 	case UCMD_CTRL_LED_TOGGLE_BLUE:
+  95:user/src/uart_io.c **** 		toggleBlueLed();
+  96:user/src/uart_io.c **** 		break;
+  97:user/src/uart_io.c **** 
+  98:user/src/uart_io.c **** 	default:
+  99:user/src/uart_io.c **** 		// TODO: report error
+ 100:user/src/uart_io.c **** 		printString("Invalid received LED command: ");
+  49              		.loc 1 100 3 is_stmt 1 view .LVU5
+  50 0012 0848     		ldr	r0, .L10
+  51              	.LVL1:
+  52              		.loc 1 100 3 is_stmt 0 view .LVU6
+  53 0014 FFF7FEFF 		bl	printString
+  54              	.LVL2:
+ 101:user/src/uart_io.c **** 		printNumberLn(data[0], DEC);
+  55              		.loc 1 101 3 is_stmt 1 view .LVU7
+  56 0018 0A21     		movs	r1, #10
+  57 001a 2078     		ldrb	r0, [r4]	@ zero_extendqisi2
+  58 001c FFF7FEFF 		bl	printNumberLn
+  59              	.LVL3:
+ 102:user/src/uart_io.c **** 		break;
+  60              		.loc 1 102 3 view .LVU8
+ 103:user/src/uart_io.c **** 	}
+ 104:user/src/uart_io.c **** }
+  61              		.loc 1 104 1 is_stmt 0 view .LVU9
+  62 0020 01E0     		b	.L1
+  63              	.LVL4:
+  64              	.L3:
+  87:user/src/uart_io.c **** 		break;
+  65              		.loc 1 87 3 is_stmt 1 view .LVU10
+  66 0022 FFF7FEFF 		bl	toggleErrorLed
+  67              	.LVL5:
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s 			page 4
+
+
+  88:user/src/uart_io.c **** 
+  68              		.loc 1 88 3 view .LVU11
+  69              	.L1:
+  70              		.loc 1 104 1 is_stmt 0 view .LVU12
+  71 0026 10BD     		pop	{r4, pc}
+  72              	.LVL6:
+  73              	.L2:
+  91:user/src/uart_io.c **** 		break;
+  74              		.loc 1 91 3 is_stmt 1 view .LVU13
+  75 0028 FFF7FEFF 		bl	toggleGreenLed
+  76              	.LVL7:
+  92:user/src/uart_io.c **** 
+  77              		.loc 1 92 3 view .LVU14
+  78 002c FBE7     		b	.L1
+  79              	.LVL8:
+  80              	.L9:
+  95:user/src/uart_io.c **** 		break;
+  81              		.loc 1 95 3 view .LVU15
+  82 002e FFF7FEFF 		bl	toggleBlueLed
+  83              	.LVL9:
+  96:user/src/uart_io.c **** 
+  84              		.loc 1 96 3 view .LVU16
+  85 0032 F8E7     		b	.L1
+  86              	.L11:
+  87              		.align	2
+  88              	.L10:
+  89 0034 00000000 		.word	.LC0
+  90              		.cfi_endproc
+  91              	.LFE833:
+  93              		.section	.text.handleUartMfdActions,"ax",%progbits
+  94              		.align	1
+  95              		.global	handleUartMfdActions
+  96              		.syntax unified
+  97              		.thumb
+  98              		.thumb_func
+  99              		.fpu softvfp
+ 101              	handleUartMfdActions:
+ 102              	.LVL10:
+ 103              	.LFB834:
+ 105:user/src/uart_io.c **** 
+ 106:user/src/uart_io.c **** void handleUartMfdActions(uint8_t *data)
+ 107:user/src/uart_io.c **** {
+ 104              		.loc 1 107 1 view -0
+ 105              		.cfi_startproc
+ 106              		@ args = 0, pretend = 0, frame = 0
+ 107              		@ frame_needed = 0, uses_anonymous_args = 0
+ 108              		.loc 1 107 1 is_stmt 0 view .LVU18
+ 109 0000 10B5     		push	{r4, lr}
+ 110              	.LCFI1:
+ 111              		.cfi_def_cfa_offset 8
+ 112              		.cfi_offset 4, -8
+ 113              		.cfi_offset 14, -4
+ 114 0002 0446     		mov	r4, r0
+ 108:user/src/uart_io.c **** 	switch (data[0])
+ 115              		.loc 1 108 2 is_stmt 1 view .LVU19
+ 116              		.loc 1 108 14 is_stmt 0 view .LVU20
+ 117 0004 0378     		ldrb	r3, [r0]	@ zero_extendqisi2
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s 			page 5
+
+
+ 118              		.loc 1 108 2 view .LVU21
+ 119 0006 443B     		subs	r3, r3, #68
+ 120 0008 102B     		cmp	r3, #16
+ 121 000a 45D8     		bhi	.L13
+ 122 000c DFE803F0 		tbb	[pc, r3]
+ 123              	.L15:
+ 124 0010 10       		.byte	(.L19-.L15)/2
+ 125 0011 09       		.byte	(.L18-.L15)/2
+ 126 0012 44       		.byte	(.L13-.L15)/2
+ 127 0013 44       		.byte	(.L13-.L15)/2
+ 128 0014 44       		.byte	(.L13-.L15)/2
+ 129 0015 2C       		.byte	(.L17-.L15)/2
+ 130 0016 44       		.byte	(.L13-.L15)/2
+ 131 0017 44       		.byte	(.L13-.L15)/2
+ 132 0018 44       		.byte	(.L13-.L15)/2
+ 133 0019 44       		.byte	(.L13-.L15)/2
+ 134 001a 44       		.byte	(.L13-.L15)/2
+ 135 001b 17       		.byte	(.L16-.L15)/2
+ 136 001c 44       		.byte	(.L13-.L15)/2
+ 137 001d 44       		.byte	(.L13-.L15)/2
+ 138 001e 44       		.byte	(.L13-.L15)/2
+ 139 001f 44       		.byte	(.L13-.L15)/2
+ 140 0020 41       		.byte	(.L14-.L15)/2
+ 141 0021 00       		.p2align 1
+ 142              	.L18:
+ 109:user/src/uart_io.c **** 	{
+ 110:user/src/uart_io.c **** 	case UCMD_MFD_CTRL_ENABLE:
+ 111:user/src/uart_io.c **** 		enableMosiDataHandler(true);
+ 143              		.loc 1 111 3 is_stmt 1 view .LVU22
+ 144 0022 0120     		movs	r0, #1
+ 145              	.LVL11:
+ 146              		.loc 1 111 3 is_stmt 0 view .LVU23
+ 147 0024 FFF7FEFF 		bl	enableMosiDataHandler
+ 148              	.LVL12:
+ 112:user/src/uart_io.c **** 		enableMisoDataHandler(true);
+ 149              		.loc 1 112 3 is_stmt 1 view .LVU24
+ 150 0028 0120     		movs	r0, #1
+ 151 002a FFF7FEFF 		bl	enableMisoDataHandler
+ 152              	.LVL13:
+ 113:user/src/uart_io.c **** 		break;
+ 153              		.loc 1 113 3 view .LVU25
+ 154              	.L12:
+ 114:user/src/uart_io.c **** 
+ 115:user/src/uart_io.c **** 	case UCMD_MFD_CTRL_DISABLE:
+ 116:user/src/uart_io.c **** 		enableMosiDataHandler(false);
+ 117:user/src/uart_io.c **** 		enableMisoDataHandler(false);
+ 118:user/src/uart_io.c **** 		break;
+ 119:user/src/uart_io.c **** 
+ 120:user/src/uart_io.c **** 	case UCMD_MFD_CTRL_MOSI_DATA:
+ 121:user/src/uart_io.c **** 		if (data[1] == UCMD_MFD_CTRL_MOSI_DATA_START)
+ 122:user/src/uart_io.c **** 		{
+ 123:user/src/uart_io.c **** 			enableMosiDataHandler(true);
+ 124:user/src/uart_io.c **** 		}
+ 125:user/src/uart_io.c **** 		else if (data[1] == UCMD_MFD_CTRL_MOSI_DATA_STOP)
+ 126:user/src/uart_io.c **** 		{
+ 127:user/src/uart_io.c **** 			enableMosiDataHandler(false);
+ 128:user/src/uart_io.c **** 		}
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s 			page 6
+
+
+ 129:user/src/uart_io.c **** 		else
+ 130:user/src/uart_io.c **** 		{
+ 131:user/src/uart_io.c **** 			printString("Invalid received MFD MOSI CTRL command: ");
+ 132:user/src/uart_io.c **** 			printNumberLn(data[1], DEC);
+ 133:user/src/uart_io.c **** 		}
+ 134:user/src/uart_io.c **** 		break;
+ 135:user/src/uart_io.c **** 
+ 136:user/src/uart_io.c **** 	case UCMD_MFD_CTRL_MISO_DATA:
+ 137:user/src/uart_io.c **** 		if (data[1] == UCMD_MFD_CTRL_MISO_DATA_START)
+ 138:user/src/uart_io.c **** 		{
+ 139:user/src/uart_io.c **** 			enableMisoDataHandler(true);
+ 140:user/src/uart_io.c **** 		}
+ 141:user/src/uart_io.c **** 		else if (data[1] == UCMD_MFD_CTRL_MISO_DATA_STOP)
+ 142:user/src/uart_io.c **** 		{
+ 143:user/src/uart_io.c **** 			enableMisoDataHandler(false);
+ 144:user/src/uart_io.c **** 		}
+ 145:user/src/uart_io.c **** 		else
+ 146:user/src/uart_io.c **** 		{
+ 147:user/src/uart_io.c **** 			printString("Invalid received MFD MISO CTRL command: ");
+ 148:user/src/uart_io.c **** 			printNumberLn(data[1], DEC);
+ 149:user/src/uart_io.c **** 		}
+ 150:user/src/uart_io.c **** 		break;
+ 151:user/src/uart_io.c **** 
+ 152:user/src/uart_io.c **** 	case UCMD_MFD_SET_TRACK:
+ 153:user/src/uart_io.c **** 		// TODO
+ 154:user/src/uart_io.c **** 		toggleErrorLed();
+ 155:user/src/uart_io.c **** 		break;
+ 156:user/src/uart_io.c **** 
+ 157:user/src/uart_io.c **** 	default:
+ 158:user/src/uart_io.c **** 		// TODO: report error
+ 159:user/src/uart_io.c **** 		printString("Invalid received MFD command: ");
+ 160:user/src/uart_io.c **** 		printNumberLn(data[0], DEC);
+ 161:user/src/uart_io.c **** 		break;
+ 162:user/src/uart_io.c **** 	}
+ 163:user/src/uart_io.c **** }
+ 155              		.loc 1 163 1 is_stmt 0 view .LVU26
+ 156 002e 10BD     		pop	{r4, pc}
+ 157              	.LVL14:
+ 158              	.L19:
+ 116:user/src/uart_io.c **** 		enableMisoDataHandler(false);
+ 159              		.loc 1 116 3 is_stmt 1 view .LVU27
+ 160 0030 0020     		movs	r0, #0
+ 161              	.LVL15:
+ 116:user/src/uart_io.c **** 		enableMisoDataHandler(false);
+ 162              		.loc 1 116 3 is_stmt 0 view .LVU28
+ 163 0032 FFF7FEFF 		bl	enableMosiDataHandler
+ 164              	.LVL16:
+ 117:user/src/uart_io.c **** 		break;
+ 165              		.loc 1 117 3 is_stmt 1 view .LVU29
+ 166 0036 0020     		movs	r0, #0
+ 167 0038 FFF7FEFF 		bl	enableMisoDataHandler
+ 168              	.LVL17:
+ 118:user/src/uart_io.c **** 
+ 169              		.loc 1 118 3 view .LVU30
+ 170 003c F7E7     		b	.L12
+ 171              	.LVL18:
+ 172              	.L16:
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s 			page 7
+
+
+ 121:user/src/uart_io.c **** 		{
+ 173              		.loc 1 121 3 view .LVU31
+ 121:user/src/uart_io.c **** 		{
+ 174              		.loc 1 121 11 is_stmt 0 view .LVU32
+ 175 003e 4378     		ldrb	r3, [r0, #1]	@ zero_extendqisi2
+ 121:user/src/uart_io.c **** 		{
+ 176              		.loc 1 121 6 view .LVU33
+ 177 0040 532B     		cmp	r3, #83
+ 178 0042 09D0     		beq	.L26
+ 125:user/src/uart_io.c **** 		{
+ 179              		.loc 1 125 8 is_stmt 1 view .LVU34
+ 125:user/src/uart_io.c **** 		{
+ 180              		.loc 1 125 11 is_stmt 0 view .LVU35
+ 181 0044 582B     		cmp	r3, #88
+ 182 0046 0BD0     		beq	.L27
+ 131:user/src/uart_io.c **** 			printNumberLn(data[1], DEC);
+ 183              		.loc 1 131 4 is_stmt 1 view .LVU36
+ 184 0048 1748     		ldr	r0, .L30
+ 185              	.LVL19:
+ 131:user/src/uart_io.c **** 			printNumberLn(data[1], DEC);
+ 186              		.loc 1 131 4 is_stmt 0 view .LVU37
+ 187 004a FFF7FEFF 		bl	printString
+ 188              	.LVL20:
+ 132:user/src/uart_io.c **** 		}
+ 189              		.loc 1 132 4 is_stmt 1 view .LVU38
+ 190 004e 0A21     		movs	r1, #10
+ 191 0050 6078     		ldrb	r0, [r4, #1]	@ zero_extendqisi2
+ 192 0052 FFF7FEFF 		bl	printNumberLn
+ 193              	.LVL21:
+ 194 0056 EAE7     		b	.L12
+ 195              	.LVL22:
+ 196              	.L26:
+ 123:user/src/uart_io.c **** 		}
+ 197              		.loc 1 123 4 view .LVU39
+ 198 0058 0120     		movs	r0, #1
+ 199              	.LVL23:
+ 123:user/src/uart_io.c **** 		}
+ 200              		.loc 1 123 4 is_stmt 0 view .LVU40
+ 201 005a FFF7FEFF 		bl	enableMosiDataHandler
+ 202              	.LVL24:
+ 203 005e E6E7     		b	.L12
+ 204              	.LVL25:
+ 205              	.L27:
+ 127:user/src/uart_io.c **** 		}
+ 206              		.loc 1 127 4 is_stmt 1 view .LVU41
+ 207 0060 0020     		movs	r0, #0
+ 208              	.LVL26:
+ 127:user/src/uart_io.c **** 		}
+ 209              		.loc 1 127 4 is_stmt 0 view .LVU42
+ 210 0062 FFF7FEFF 		bl	enableMosiDataHandler
+ 211              	.LVL27:
+ 212 0066 E2E7     		b	.L12
+ 213              	.LVL28:
+ 214              	.L17:
+ 137:user/src/uart_io.c **** 		{
+ 215              		.loc 1 137 3 is_stmt 1 view .LVU43
+ 137:user/src/uart_io.c **** 		{
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s 			page 8
+
+
+ 216              		.loc 1 137 11 is_stmt 0 view .LVU44
+ 217 0068 4378     		ldrb	r3, [r0, #1]	@ zero_extendqisi2
+ 137:user/src/uart_io.c **** 		{
+ 218              		.loc 1 137 6 view .LVU45
+ 219 006a 532B     		cmp	r3, #83
+ 220 006c 09D0     		beq	.L28
+ 141:user/src/uart_io.c **** 		{
+ 221              		.loc 1 141 8 is_stmt 1 view .LVU46
+ 141:user/src/uart_io.c **** 		{
+ 222              		.loc 1 141 11 is_stmt 0 view .LVU47
+ 223 006e 582B     		cmp	r3, #88
+ 224 0070 0BD0     		beq	.L29
+ 147:user/src/uart_io.c **** 			printNumberLn(data[1], DEC);
+ 225              		.loc 1 147 4 is_stmt 1 view .LVU48
+ 226 0072 0E48     		ldr	r0, .L30+4
+ 227              	.LVL29:
+ 147:user/src/uart_io.c **** 			printNumberLn(data[1], DEC);
+ 228              		.loc 1 147 4 is_stmt 0 view .LVU49
+ 229 0074 FFF7FEFF 		bl	printString
+ 230              	.LVL30:
+ 148:user/src/uart_io.c **** 		}
+ 231              		.loc 1 148 4 is_stmt 1 view .LVU50
+ 232 0078 0A21     		movs	r1, #10
+ 233 007a 6078     		ldrb	r0, [r4, #1]	@ zero_extendqisi2
+ 234 007c FFF7FEFF 		bl	printNumberLn
+ 235              	.LVL31:
+ 236 0080 D5E7     		b	.L12
+ 237              	.LVL32:
+ 238              	.L28:
+ 139:user/src/uart_io.c **** 		}
+ 239              		.loc 1 139 4 view .LVU51
+ 240 0082 0120     		movs	r0, #1
+ 241              	.LVL33:
+ 139:user/src/uart_io.c **** 		}
+ 242              		.loc 1 139 4 is_stmt 0 view .LVU52
+ 243 0084 FFF7FEFF 		bl	enableMisoDataHandler
+ 244              	.LVL34:
+ 245 0088 D1E7     		b	.L12
+ 246              	.LVL35:
+ 247              	.L29:
+ 143:user/src/uart_io.c **** 		}
+ 248              		.loc 1 143 4 is_stmt 1 view .LVU53
+ 249 008a 0020     		movs	r0, #0
+ 250              	.LVL36:
+ 143:user/src/uart_io.c **** 		}
+ 251              		.loc 1 143 4 is_stmt 0 view .LVU54
+ 252 008c FFF7FEFF 		bl	enableMisoDataHandler
+ 253              	.LVL37:
+ 254 0090 CDE7     		b	.L12
+ 255              	.LVL38:
+ 256              	.L14:
+ 154:user/src/uart_io.c **** 		break;
+ 257              		.loc 1 154 3 is_stmt 1 view .LVU55
+ 258 0092 FFF7FEFF 		bl	toggleErrorLed
+ 259              	.LVL39:
+ 155:user/src/uart_io.c **** 
+ 260              		.loc 1 155 3 view .LVU56
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s 			page 9
+
+
+ 261 0096 CAE7     		b	.L12
+ 262              	.LVL40:
+ 263              	.L13:
+ 159:user/src/uart_io.c **** 		printNumberLn(data[0], DEC);
+ 264              		.loc 1 159 3 view .LVU57
+ 265 0098 0548     		ldr	r0, .L30+8
+ 266              	.LVL41:
+ 159:user/src/uart_io.c **** 		printNumberLn(data[0], DEC);
+ 267              		.loc 1 159 3 is_stmt 0 view .LVU58
+ 268 009a FFF7FEFF 		bl	printString
+ 269              	.LVL42:
+ 160:user/src/uart_io.c **** 		break;
+ 270              		.loc 1 160 3 is_stmt 1 view .LVU59
+ 271 009e 0A21     		movs	r1, #10
+ 272 00a0 2078     		ldrb	r0, [r4]	@ zero_extendqisi2
+ 273 00a2 FFF7FEFF 		bl	printNumberLn
+ 274              	.LVL43:
+ 161:user/src/uart_io.c **** 	}
+ 275              		.loc 1 161 3 view .LVU60
+ 276              		.loc 1 163 1 is_stmt 0 view .LVU61
+ 277 00a6 C2E7     		b	.L12
+ 278              	.L31:
+ 279              		.align	2
+ 280              	.L30:
+ 281 00a8 00000000 		.word	.LC1
+ 282 00ac 2C000000 		.word	.LC2
+ 283 00b0 58000000 		.word	.LC3
+ 284              		.cfi_endproc
+ 285              	.LFE834:
+ 287              		.section	.text.uartRxDataHandler,"ax",%progbits
+ 288              		.align	1
+ 289              		.global	uartRxDataHandler
+ 290              		.syntax unified
+ 291              		.thumb
+ 292              		.thumb_func
+ 293              		.fpu softvfp
+ 295              	uartRxDataHandler:
+ 296              	.LFB832:
+  34:user/src/uart_io.c **** 	// handle UART received data
+ 297              		.loc 1 34 1 is_stmt 1 view -0
+ 298              		.cfi_startproc
+ 299              		@ args = 0, pretend = 0, frame = 8
+ 300              		@ frame_needed = 0, uses_anonymous_args = 0
+ 301 0000 10B5     		push	{r4, lr}
+ 302              	.LCFI2:
+ 303              		.cfi_def_cfa_offset 8
+ 304              		.cfi_offset 4, -8
+ 305              		.cfi_offset 14, -4
+ 306 0002 82B0     		sub	sp, sp, #8
+ 307              	.LCFI3:
+ 308              		.cfi_def_cfa_offset 16
+  36:user/src/uart_io.c **** 	uint8_t data[UCMD_RX_DATA_SIZE];
+ 309              		.loc 1 36 2 view .LVU63
+ 310              	.LVL44:
+  37:user/src/uart_io.c **** 
+ 311              		.loc 1 37 2 view .LVU64
+  39:user/src/uart_io.c **** 	if (numberOfBytes < UCMD_RX_DATA_SIZE)
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s 			page 10
+
+
+ 312              		.loc 1 39 2 view .LVU65
+  39:user/src/uart_io.c **** 	if (numberOfBytes < UCMD_RX_DATA_SIZE)
+ 313              		.loc 1 39 18 is_stmt 0 view .LVU66
+ 314 0004 1C48     		ldr	r0, .L43
+ 315 0006 FFF7FEFF 		bl	ring_buffer_size
+ 316              	.LVL45:
+  39:user/src/uart_io.c **** 	if (numberOfBytes < UCMD_RX_DATA_SIZE)
+ 317              		.loc 1 39 16 view .LVU67
+ 318 000a C4B2     		uxtb	r4, r0
+ 319              	.LVL46:
+  40:user/src/uart_io.c **** 	{
+ 320              		.loc 1 40 2 is_stmt 1 view .LVU68
+  40:user/src/uart_io.c **** 	{
+ 321              		.loc 1 40 5 is_stmt 0 view .LVU69
+ 322 000c 032C     		cmp	r4, #3
+ 323 000e 01D8     		bhi	.L41
+ 324              	.L32:
+  80:user/src/uart_io.c **** 
+ 325              		.loc 1 80 1 view .LVU70
+ 326 0010 02B0     		add	sp, sp, #8
+ 327              	.LCFI4:
+ 328              		.cfi_remember_state
+ 329              		.cfi_def_cfa_offset 8
+ 330              		@ sp needed
+ 331 0012 10BD     		pop	{r4, pc}
+ 332              	.LVL47:
+ 333              	.L41:
+ 334              	.LCFI5:
+ 335              		.cfi_restore_state
+  45:user/src/uart_io.c **** 	{
+ 336              		.loc 1 45 2 is_stmt 1 view .LVU71
+  45:user/src/uart_io.c **** 	{
+ 337              		.loc 1 45 6 is_stmt 0 view .LVU72
+ 338 0014 0422     		movs	r2, #4
+ 339 0016 0DEB0201 		add	r1, sp, r2
+ 340 001a 1748     		ldr	r0, .L43
+ 341 001c FFF7FEFF 		bl	ring_buffer_get
+ 342              	.LVL48:
+  45:user/src/uart_io.c **** 	{
+ 343              		.loc 1 45 5 view .LVU73
+ 344 0020 30BB     		cbnz	r0, .L35
+  47:user/src/uart_io.c **** 		writeData(data, numberOfBytes);
+ 345              		.loc 1 47 3 is_stmt 1 view .LVU74
+ 346 0022 1648     		ldr	r0, .L43+4
+ 347 0024 FFF7FEFF 		bl	printString
+ 348              	.LVL49:
+  48:user/src/uart_io.c **** 
+ 349              		.loc 1 48 3 view .LVU75
+ 350 0028 2146     		mov	r1, r4
+ 351 002a 01A8     		add	r0, sp, #4
+ 352 002c FFF7FEFF 		bl	writeData
+ 353              	.LVL50:
+  50:user/src/uart_io.c **** 		{
+ 354              		.loc 1 50 3 view .LVU76
+  50:user/src/uart_io.c **** 		{
+ 355              		.loc 1 50 15 is_stmt 0 view .LVU77
+ 356 0030 9DF80430 		ldrb	r3, [sp, #4]	@ zero_extendqisi2
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s 			page 11
+
+
+  50:user/src/uart_io.c **** 		{
+ 357              		.loc 1 50 3 view .LVU78
+ 358 0034 522B     		cmp	r3, #82
+ 359 0036 0FD0     		beq	.L36
+ 360 0038 542B     		cmp	r3, #84
+ 361 003a 12D0     		beq	.L37
+ 362 003c 4C2B     		cmp	r3, #76
+ 363 003e 06D0     		beq	.L42
+  70:user/src/uart_io.c **** 			ring_buffer_flush(&uartRxBuff);
+ 364              		.loc 1 70 4 is_stmt 1 view .LVU79
+ 365 0040 0F48     		ldr	r0, .L43+8
+ 366 0042 FFF7FEFF 		bl	printStringLn
+ 367              	.LVL51:
+  71:user/src/uart_io.c **** 			break;
+ 368              		.loc 1 71 4 view .LVU80
+ 369 0046 0C48     		ldr	r0, .L43
+ 370 0048 FFF7FEFF 		bl	ring_buffer_flush
+ 371              	.LVL52:
+  72:user/src/uart_io.c **** 		}
+ 372              		.loc 1 72 4 view .LVU81
+ 373 004c E0E7     		b	.L32
+ 374              	.L42:
+  53:user/src/uart_io.c **** 			break;
+ 375              		.loc 1 53 4 view .LVU82
+ 376 004e 0DF10500 		add	r0, sp, #5
+ 377 0052 FFF7FEFF 		bl	handleLedActions
+ 378              	.LVL53:
+  54:user/src/uart_io.c **** 
+ 379              		.loc 1 54 4 view .LVU83
+ 380 0056 DBE7     		b	.L32
+ 381              	.L36:
+  57:user/src/uart_io.c **** 			break;
+ 382              		.loc 1 57 4 view .LVU84
+ 383 0058 0DF10500 		add	r0, sp, #5
+ 384 005c FFF7FEFF 		bl	handleUartMfdActions
+ 385              	.LVL54:
+  58:user/src/uart_io.c **** 
+ 386              		.loc 1 58 4 view .LVU85
+ 387 0060 D6E7     		b	.L32
+ 388              	.L37:
+  61:user/src/uart_io.c **** 			//if (data[1] == UCMD_TEST_SEND_SPI_BYTE)
+ 389              		.loc 1 61 4 view .LVU86
+ 390 0062 0122     		movs	r2, #1
+ 391 0064 0DF10501 		add	r1, sp, #5
+ 392 0068 0648     		ldr	r0, .L43+12
+ 393 006a FFF7FEFF 		bl	ring_buffer_put
+ 394              	.LVL55:
+  66:user/src/uart_io.c **** 
+ 395              		.loc 1 66 4 view .LVU87
+ 396 006e CFE7     		b	.L32
+ 397              	.L35:
+  78:user/src/uart_io.c **** 	}
+ 398              		.loc 1 78 3 view .LVU88
+ 399 0070 0120     		movs	r0, #1
+ 400 0072 FFF7FEFF 		bl	ctrlErrorLed
+ 401              	.LVL56:
+ 402 0076 CBE7     		b	.L32
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s 			page 12
+
+
+ 403              	.L44:
+ 404              		.align	2
+ 405              	.L43:
+ 406 0078 00000000 		.word	uartRxBuff
+ 407 007c 00000000 		.word	.LC4
+ 408 0080 08000000 		.word	.LC5
+ 409 0084 00000000 		.word	mosiBuff
+ 410              		.cfi_endproc
+ 411              	.LFE832:
+ 413              		.comm	mosiLowLevelData,12,4
+ 414              		.comm	mosiData,10,4
+ 415              		.comm	mosiBuff,24,4
+ 416              		.comm	misoData,16,4
+ 417              		.comm	misoPinChange,1,1
+ 418              		.section	.rodata.handleLedActions.str1.4,"aMS",%progbits,1
+ 419              		.align	2
+ 420              	.LC0:
+ 421 0000 496E7661 		.ascii	"Invalid received LED command: \000"
+ 421      6C696420 
+ 421      72656365 
+ 421      69766564 
+ 421      204C4544 
+ 422              		.section	.rodata.handleUartMfdActions.str1.4,"aMS",%progbits,1
+ 423              		.align	2
+ 424              	.LC1:
+ 425 0000 496E7661 		.ascii	"Invalid received MFD MOSI CTRL command: \000"
+ 425      6C696420 
+ 425      72656365 
+ 425      69766564 
+ 425      204D4644 
+ 426 0029 000000   		.space	3
+ 427              	.LC2:
+ 428 002c 496E7661 		.ascii	"Invalid received MFD MISO CTRL command: \000"
+ 428      6C696420 
+ 428      72656365 
+ 428      69766564 
+ 428      204D4644 
+ 429 0055 000000   		.space	3
+ 430              	.LC3:
+ 431 0058 496E7661 		.ascii	"Invalid received MFD command: \000"
+ 431      6C696420 
+ 431      72656365 
+ 431      69766564 
+ 431      204D4644 
+ 432              		.section	.rodata.uartRxDataHandler.str1.4,"aMS",%progbits,1
+ 433              		.align	2
+ 434              	.LC4:
+ 435 0000 434D443A 		.ascii	"CMD: \000"
+ 435      2000
+ 436 0006 0000     		.space	2
+ 437              	.LC5:
+ 438 0008 21212120 		.ascii	"!!! Invalid received command\000"
+ 438      496E7661 
+ 438      6C696420 
+ 438      72656365 
+ 438      69766564 
+ 439              		.text
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s 			page 13
+
+
+ 440              	.Letext0:
+ 441              		.file 2 "c:\\users\\domen\\appdata\\roaming\\gnu mcu eclipse\\arm embedded gcc\\8.3.1-1.1\\arm-non
+ 442              		.file 3 "c:\\users\\domen\\appdata\\roaming\\gnu mcu eclipse\\arm embedded gcc\\8.3.1-1.1\\arm-non
+ 443              		.file 4 "Drivers/CMSIS/Include/core_cm3.h"
+ 444              		.file 5 "Drivers/CMSIS/Device/ST/STM32L1xx/Include/system_stm32l1xx.h"
+ 445              		.file 6 "Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_ll_dma.h"
+ 446              		.file 7 "Drivers/STM32L1xx_HAL_Driver/Inc/stm32l1xx_ll_tim.h"
+ 447              		.file 8 "user/inc/ring_buffer.h"
+ 448              		.file 9 "user/inc/cdcData.h"
+ 449              		.file 10 "user/inc/mfd_io.h"
+ 450              		.file 11 "user/inc/uart_print.h"
+ 451              		.file 12 "user/inc/io.h"
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s 			page 14
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 uart_io.c
+C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s:16     .text.handleLedActions:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s:24     .text.handleLedActions:0000000000000000 handleLedActions
+C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s:89     .text.handleLedActions:0000000000000034 $d
+C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s:94     .text.handleUartMfdActions:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s:101    .text.handleUartMfdActions:0000000000000000 handleUartMfdActions
+C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s:124    .text.handleUartMfdActions:0000000000000010 $d
+C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s:281    .text.handleUartMfdActions:00000000000000a8 $d
+C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s:288    .text.uartRxDataHandler:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s:295    .text.uartRxDataHandler:0000000000000000 uartRxDataHandler
+C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s:406    .text.uartRxDataHandler:0000000000000078 $d
+                            *COM*:0000000000000018 mosiBuff
+                            *COM*:000000000000000c mosiLowLevelData
+                            *COM*:000000000000000a mosiData
+                            *COM*:0000000000000010 misoData
+                            *COM*:0000000000000001 misoPinChange
+C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s:419    .rodata.handleLedActions.str1.4:0000000000000000 $d
+C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s:423    .rodata.handleUartMfdActions.str1.4:0000000000000000 $d
+C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s:433    .rodata.uartRxDataHandler.str1.4:0000000000000000 $d
+C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s:141    .text.handleUartMfdActions:0000000000000021 $d
+C:\Users\domen\AppData\Local\Temp\ccmWI3bY.s:141    .text.handleUartMfdActions:0000000000000022 $t
+
+UNDEFINED SYMBOLS
+printString
+printNumberLn
+toggleErrorLed
+toggleGreenLed
+toggleBlueLed
+enableMosiDataHandler
+enableMisoDataHandler
+ring_buffer_size
+ring_buffer_get
+writeData
+printStringLn
+ring_buffer_flush
+ring_buffer_put
+ctrlErrorLed
+uartRxBuff

@@ -1,0 +1,1161 @@
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccIis6zY.s 			page 1
+
+
+   1              		.cpu cortex-m3
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 1
+  10              		.eabi_attribute 18, 4
+  11              		.file	"ring_buffer.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.ring_buffer_init,"ax",%progbits
+  16              		.align	1
+  17              		.global	ring_buffer_init
+  18              		.arch armv7-m
+  19              		.syntax unified
+  20              		.thumb
+  21              		.thumb_func
+  22              		.fpu softvfp
+  24              	ring_buffer_init:
+  25              	.LVL0:
+  26              	.LFB0:
+  27              		.file 1 "user/src/ring_buffer.c"
+   1:user/src/ring_buffer.c **** /**
+   2:user/src/ring_buffer.c ****  ******************************************************************************
+   3:user/src/ring_buffer.c ****  * File Name          : ring_buffer
+   4:user/src/ring_buffer.c ****  * Description        : This file provides code for the initialization
+   5:user/src/ring_buffer.c ****  *                      of circuilar (ring) buffer
+   6:user/src/ring_buffer.c ****  * @date    13-Aug-2017
+   7:user/src/ring_buffer.c ****  * @author  Originally: Chris Karaplis, modified by Domen Jurkovic
+   8:user/src/ring_buffer.c ****  * @version v1.2
+   9:user/src/ring_buffer.c ****  *
+  10:user/src/ring_buffer.c ****  * Copyright (c) 2015, simplyembedded.org
+  11:user/src/ring_buffer.c ****  * Copyright (c) 2017, damogranlabs.com
+  12:user/src/ring_buffer.c ****  *
+  13:user/src/ring_buffer.c ****  * All rights reserved.
+  14:user/src/ring_buffer.c ****  * 
+  15:user/src/ring_buffer.c ****  * Redistribution and use in source and binary forms, with or without 
+  16:user/src/ring_buffer.c ****  * modification, are permitted provided that the following conditions are met:
+  17:user/src/ring_buffer.c ****  *
+  18:user/src/ring_buffer.c ****  * 1. Redistributions of source code must retain the above copyright notice, 
+  19:user/src/ring_buffer.c ****  *    this list of conditions and the following disclaimer.
+  20:user/src/ring_buffer.c ****  * 
+  21:user/src/ring_buffer.c ****  * 2. Redistributions in binary form must reproduce the above copyright notice,
+  22:user/src/ring_buffer.c ****  *    this list of conditions and the following disclaimer in the documentation
+  23:user/src/ring_buffer.c ****  *    and/or other materials provided with the distribution.
+  24:user/src/ring_buffer.c ****  *
+  25:user/src/ring_buffer.c ****  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+  26:user/src/ring_buffer.c ****  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+  27:user/src/ring_buffer.c ****  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+  28:user/src/ring_buffer.c ****  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE 
+  29:user/src/ring_buffer.c ****  * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+  30:user/src/ring_buffer.c ****  * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+  31:user/src/ring_buffer.c ****  * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccIis6zY.s 			page 2
+
+
+  32:user/src/ring_buffer.c ****  * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+  33:user/src/ring_buffer.c ****  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+  34:user/src/ring_buffer.c ****  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+  35:user/src/ring_buffer.c ****  * POSSIBILITY OF SUCH DAMAGE.
+  36:user/src/ring_buffer.c ****  *
+  37:user/src/ring_buffer.c ****  *
+  38:user/src/ring_buffer.c ****  *  
+  39:user/src/ring_buffer.c ****  * @source  Original Source
+  40:user/src/ring_buffer.c ****  *          http://www.simplyembedded.org/
+  41:user/src/ring_buffer.c ****  *					https://github.com/simplyembedded/msp430_launchpad/
+  42:user/src/ring_buffer.c ****  *
+  43:user/src/ring_buffer.c ****  * @source  Modified:
+  44:user/src/ring_buffer.c ****  *          http://damogranlabs.com/
+  45:user/src/ring_buffer.c ****  *          https://github.com/damogranlabs
+  46:user/src/ring_buffer.c ****  *
+  47:user/src/ring_buffer.c ****  *    1. Create ring buffer descriptor structure, define buffer size:
+  48:user/src/ring_buffer.c ****  *        #define RX_BUFF_SIZE 128
+  49:user/src/ring_buffer.c ****  *        rb_att_t rx_buff;
+  50:user/src/ring_buffer.c ****  *
+  51:user/src/ring_buffer.c ****  *    3. Init ring buffer and check for error (for example, your error report function is called ha
+  52:user/src/ring_buffer.c ****  *        if(ring_buffer_init(&rx_buff, RX_BUFF_SIZE) != RB_OK) handle_error();
+  53:user/src/ring_buffer.c ****  *
+  54:user/src/ring_buffer.c ****  *    4. Put/get data to/from ring buffer:
+  55:user/src/ring_buffer.c ****  *        ring_buffer_put(&rx_buff, data, 20);
+  56:user/src/ring_buffer.c ****  *        ring_buffer_get(&rx_buff, data, 10);
+  57:user/src/ring_buffer.c ****  */
+  58:user/src/ring_buffer.c **** 
+  59:user/src/ring_buffer.c **** /* Includes ------------------------------------------------------------------*/
+  60:user/src/ring_buffer.c **** #include "ring_buffer.h"
+  61:user/src/ring_buffer.c **** 
+  62:user/src/ring_buffer.c **** #include <string.h>
+  63:user/src/ring_buffer.c **** #include <stdlib.h>
+  64:user/src/ring_buffer.c **** 
+  65:user/src/ring_buffer.c **** /**
+  66:user/src/ring_buffer.c ****  * @brief Initialize a ring buffer
+  67:user/src/ring_buffer.c ****  * @param *rbd - pointer to the ring buffer descriptor
+  68:user/src/ring_buffer.c ****  * @param size - ring buffer size in number of bytes
+  69:user/src/ring_buffer.c ****  * @return RB_ERROR, RB_OK
+  70:user/src/ring_buffer.c ****  */
+  71:user/src/ring_buffer.c **** rb_status_t ring_buffer_init(rb_att_t *rbd, uint32_t size){
+  28              		.loc 1 71 59 view -0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		.loc 1 71 59 is_stmt 0 view .LVU1
+  33 0000 38B5     		push	{r3, r4, r5, lr}
+  34              	.LCFI0:
+  35              		.cfi_def_cfa_offset 16
+  36              		.cfi_offset 3, -16
+  37              		.cfi_offset 4, -12
+  38              		.cfi_offset 5, -8
+  39              		.cfi_offset 14, -4
+  40 0002 0446     		mov	r4, r0
+  72:user/src/ring_buffer.c ****   rbd->status = RB_ERROR;
+  41              		.loc 1 72 3 is_stmt 1 view .LVU2
+  42              		.loc 1 72 15 is_stmt 0 view .LVU3
+  43 0004 0123     		movs	r3, #1
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccIis6zY.s 			page 3
+
+
+  44 0006 0375     		strb	r3, [r0, #20]
+  73:user/src/ring_buffer.c ****   
+  74:user/src/ring_buffer.c ****   
+  75:user/src/ring_buffer.c ****   if(rbd != NULL){  // rbd must not be pointer to nowhere
+  45              		.loc 1 75 3 is_stmt 1 view .LVU4
+  46              		.loc 1 75 5 is_stmt 0 view .LVU5
+  47 0008 68B1     		cbz	r0, .L2
+  48 000a 0D46     		mov	r5, r1
+  76:user/src/ring_buffer.c ****     rbd->buff = calloc(size, sizeof(uint8_t)); // allocate memory of "size" bytes, set all values t
+  49              		.loc 1 76 5 is_stmt 1 view .LVU6
+  50              		.loc 1 76 17 is_stmt 0 view .LVU7
+  51 000c 1946     		mov	r1, r3
+  52              	.LVL1:
+  53              		.loc 1 76 17 view .LVU8
+  54 000e 2846     		mov	r0, r5
+  55              	.LVL2:
+  56              		.loc 1 76 17 view .LVU9
+  57 0010 FFF7FEFF 		bl	calloc
+  58              	.LVL3:
+  59              		.loc 1 76 15 view .LVU10
+  60 0014 2060     		str	r0, [r4]
+  77:user/src/ring_buffer.c ****     //rbd->buff = malloc(size * sizeof(uint8_t)); // Use this instead of calloc() if you don't wish
+  78:user/src/ring_buffer.c **** 
+  79:user/src/ring_buffer.c ****     if(rbd->buff != NULL){  // buff must not be pointer to nowhere
+  61              		.loc 1 79 5 is_stmt 1 view .LVU11
+  62              		.loc 1 79 11 is_stmt 0 view .LVU12
+  63 0016 2368     		ldr	r3, [r4]
+  64              		.loc 1 79 7 view .LVU13
+  65 0018 2BB1     		cbz	r3, .L2
+  80:user/src/ring_buffer.c ****       rbd->n_elem = size;
+  66              		.loc 1 80 7 is_stmt 1 view .LVU14
+  67              		.loc 1 80 19 is_stmt 0 view .LVU15
+  68 001a 6560     		str	r5, [r4, #4]
+  81:user/src/ring_buffer.c **** 
+  82:user/src/ring_buffer.c ****       // Initialize the ring buffer internal variables
+  83:user/src/ring_buffer.c ****       rbd->head = 0;
+  69              		.loc 1 83 7 is_stmt 1 view .LVU16
+  70              		.loc 1 83 17 is_stmt 0 view .LVU17
+  71 001c 0023     		movs	r3, #0
+  72 001e A360     		str	r3, [r4, #8]
+  84:user/src/ring_buffer.c ****       rbd->tail = 0;
+  73              		.loc 1 84 7 is_stmt 1 view .LVU18
+  74              		.loc 1 84 17 is_stmt 0 view .LVU19
+  75 0020 E360     		str	r3, [r4, #12]
+  85:user/src/ring_buffer.c ****       rbd->count = 0;
+  76              		.loc 1 85 7 is_stmt 1 view .LVU20
+  77              		.loc 1 85 18 is_stmt 0 view .LVU21
+  78 0022 2361     		str	r3, [r4, #16]
+  86:user/src/ring_buffer.c ****       
+  87:user/src/ring_buffer.c ****       rbd->status = RB_OK;
+  79              		.loc 1 87 7 is_stmt 1 view .LVU22
+  80              		.loc 1 87 19 is_stmt 0 view .LVU23
+  81 0024 2375     		strb	r3, [r4, #20]
+  82              	.LVL4:
+  83              	.L2:
+  88:user/src/ring_buffer.c ****     }
+  89:user/src/ring_buffer.c ****   }
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccIis6zY.s 			page 4
+
+
+  90:user/src/ring_buffer.c **** 
+  91:user/src/ring_buffer.c ****   return rbd->status;
+  84              		.loc 1 91 3 is_stmt 1 view .LVU24
+  85              		.loc 1 91 13 is_stmt 0 view .LVU25
+  86 0026 207D     		ldrb	r0, [r4, #20]	@ zero_extendqisi2
+  92:user/src/ring_buffer.c **** }
+  87              		.loc 1 92 1 view .LVU26
+  88 0028 38BD     		pop	{r3, r4, r5, pc}
+  89              		.loc 1 92 1 view .LVU27
+  90              		.cfi_endproc
+  91              	.LFE0:
+  93              		.section	.text.ring_buffer_full,"ax",%progbits
+  94              		.align	1
+  95              		.global	ring_buffer_full
+  96              		.syntax unified
+  97              		.thumb
+  98              		.thumb_func
+  99              		.fpu softvfp
+ 101              	ring_buffer_full:
+ 102              	.LVL5:
+ 103              	.LFB3:
+  93:user/src/ring_buffer.c ****         
+  94:user/src/ring_buffer.c **** /**
+  95:user/src/ring_buffer.c ****  * @brief Add a number of elements to the ring buffer
+  96:user/src/ring_buffer.c ****  * @param *rbd - pointer to the ring buffer descriptor
+  97:user/src/ring_buffer.c ****  * @param data - the data to add
+  98:user/src/ring_buffer.c ****  * @param num - number of elements to add
+  99:user/src/ring_buffer.c ****  * @return RB_NOT_ENOUGH_SPACE, RB_OK, RB_ERROR
+ 100:user/src/ring_buffer.c ****  */
+ 101:user/src/ring_buffer.c **** rb_status_t ring_buffer_put(rb_att_t *rbd, uint8_t *data, uint32_t num){
+ 102:user/src/ring_buffer.c ****   rb_status_t status = RB_ERROR;
+ 103:user/src/ring_buffer.c ****   uint32_t num_to_end = 0; // number of elements to the last buffer element (including current one 
+ 104:user/src/ring_buffer.c ****   
+ 105:user/src/ring_buffer.c ****   if(rbd != NULL){  // rbd must not be a pointer to nowhere
+ 106:user/src/ring_buffer.c ****     if(ring_buffer_free_elements(rbd) >= num){  // is there enough space in buffer for num of data
+ 107:user/src/ring_buffer.c ****       if(rbd->head >= rbd->n_elem){ // reset ring buffer head
+ 108:user/src/ring_buffer.c ****         rbd->head = 0;
+ 109:user/src/ring_buffer.c ****       }
+ 110:user/src/ring_buffer.c ****       
+ 111:user/src/ring_buffer.c ****       num_to_end = rbd->n_elem - rbd->head; // that many data can be written into buffer, before re
+ 112:user/src/ring_buffer.c ****       if(num_to_end < num){ // if there is not enough space for "num" of data before reaching buffe
+ 113:user/src/ring_buffer.c ****         memcpy(&(rbd->buff[rbd->head]), data, num_to_end); //write to buffer partial data
+ 114:user/src/ring_buffer.c ****         memcpy(rbd->buff, (data + num_to_end), (num - num_to_end)); //write to buffer rest of the d
+ 115:user/src/ring_buffer.c ****         
+ 116:user/src/ring_buffer.c ****         rbd->head = num - num_to_end;  //head
+ 117:user/src/ring_buffer.c ****         rbd->count = rbd->count + num; // increment counter for num of data
+ 118:user/src/ring_buffer.c ****       }
+ 119:user/src/ring_buffer.c ****       else{ // there is enough space before reaching buffer's last element
+ 120:user/src/ring_buffer.c ****         memcpy(&(rbd->buff[rbd->head]), data, num); //write to buffer all num of data in one piece
+ 121:user/src/ring_buffer.c ****         
+ 122:user/src/ring_buffer.c ****         rbd->head = rbd->head + num;  // increment head
+ 123:user/src/ring_buffer.c ****         rbd->count = rbd->count + num; // increment counter for num of data
+ 124:user/src/ring_buffer.c ****       }
+ 125:user/src/ring_buffer.c ****       
+ 126:user/src/ring_buffer.c ****       status = RB_OK;
+ 127:user/src/ring_buffer.c ****     }
+ 128:user/src/ring_buffer.c ****     else{ // there is not enough space in buffer for num of data
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccIis6zY.s 			page 5
+
+
+ 129:user/src/ring_buffer.c ****       status = RB_NOT_ENOUGH_SPACE;
+ 130:user/src/ring_buffer.c ****     }
+ 131:user/src/ring_buffer.c ****   }
+ 132:user/src/ring_buffer.c ****   rbd->status = status;
+ 133:user/src/ring_buffer.c ****   return status;
+ 134:user/src/ring_buffer.c **** }
+ 135:user/src/ring_buffer.c **** 
+ 136:user/src/ring_buffer.c **** /**
+ 137:user/src/ring_buffer.c ****  * @brief Get (and remove) a number of elements from the ring buffer
+ 138:user/src/ring_buffer.c ****  * @param *rbd - pointer to the ring buffer descriptor
+ 139:user/src/ring_buffer.c ****  * @param data - pointer to store the data
+ 140:user/src/ring_buffer.c ****  * @param num - number of elements to read
+ 141:user/src/ring_buffer.c ****  * @return RB_NOT_ENOUGH_DATA, RB_OK, RB_ERROR
+ 142:user/src/ring_buffer.c ****  */
+ 143:user/src/ring_buffer.c **** rb_status_t ring_buffer_get(rb_att_t *rbd, uint8_t *data, uint32_t num){
+ 144:user/src/ring_buffer.c ****   rb_status_t status = RB_ERROR;
+ 145:user/src/ring_buffer.c ****   uint32_t num_to_end = 0;
+ 146:user/src/ring_buffer.c ****   
+ 147:user/src/ring_buffer.c ****   if(rbd != NULL){  // rbd must not be a pointer to nowhere
+ 148:user/src/ring_buffer.c ****     if(ring_buffer_size(rbd) >= num){ //buffer is not empty and there is at least num of data store
+ 149:user/src/ring_buffer.c ****       if(rbd->tail >= rbd->n_elem){ // reset ring buffer tail
+ 150:user/src/ring_buffer.c ****         rbd->tail = 0;
+ 151:user/src/ring_buffer.c ****       }
+ 152:user/src/ring_buffer.c ****       
+ 153:user/src/ring_buffer.c ****       num_to_end = rbd->n_elem - rbd->tail;
+ 154:user/src/ring_buffer.c ****       if(num >= num_to_end){ // is there enough ("num") of data to read before reaching buffer last
+ 155:user/src/ring_buffer.c ****         memcpy(data, &(rbd->buff[rbd->tail]), num_to_end); //read from buffer partial data
+ 156:user/src/ring_buffer.c ****         memcpy(data + num_to_end, rbd->buff, (num - num_to_end)); //read from buffer remaining part
+ 157:user/src/ring_buffer.c ****           
+ 158:user/src/ring_buffer.c ****         rbd->tail = num - num_to_end;  // tail increment
+ 159:user/src/ring_buffer.c ****         rbd->count = rbd->count - num; // decrement counter for num of data
+ 160:user/src/ring_buffer.c ****       }
+ 161:user/src/ring_buffer.c ****       else{ //there is enough data to be read before reaching last element of ring buffer
+ 162:user/src/ring_buffer.c ****         memcpy(data, &(rbd->buff[rbd->tail]), num); //read from buffer
+ 163:user/src/ring_buffer.c ****         
+ 164:user/src/ring_buffer.c ****         rbd->tail = rbd->tail + num;  // increment tail
+ 165:user/src/ring_buffer.c ****         rbd->count = rbd->count - num; // decrement counter for num of data
+ 166:user/src/ring_buffer.c ****       }
+ 167:user/src/ring_buffer.c ****       status = RB_OK;
+ 168:user/src/ring_buffer.c ****     }
+ 169:user/src/ring_buffer.c ****     else{
+ 170:user/src/ring_buffer.c ****       status = RB_NOT_ENOUGH_DATA;
+ 171:user/src/ring_buffer.c ****     }
+ 172:user/src/ring_buffer.c ****   }
+ 173:user/src/ring_buffer.c ****   
+ 174:user/src/ring_buffer.c ****   rbd->status = status;
+ 175:user/src/ring_buffer.c ****   return status;
+ 176:user/src/ring_buffer.c **** }
+ 177:user/src/ring_buffer.c **** 
+ 178:user/src/ring_buffer.c **** /**
+ 179:user/src/ring_buffer.c ****  * @brief Check if ring buffer is full
+ 180:user/src/ring_buffer.c ****  * @param *rbd - pointer to the ring buffer descriptor
+ 181:user/src/ring_buffer.c ****  * @return RB_FULL if empty, RB_OK if not, RB_ERROR if invalid parameters. 
+ 182:user/src/ring_buffer.c ****  */
+ 183:user/src/ring_buffer.c **** rb_status_t ring_buffer_full(rb_att_t *rbd){
+ 104              		.loc 1 183 44 is_stmt 1 view -0
+ 105              		.cfi_startproc
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccIis6zY.s 			page 6
+
+
+ 106              		@ args = 0, pretend = 0, frame = 0
+ 107              		@ frame_needed = 0, uses_anonymous_args = 0
+ 108              		@ link register save eliminated.
+ 184:user/src/ring_buffer.c ****   rb_status_t status = RB_ERROR;
+ 109              		.loc 1 184 3 view .LVU29
+ 185:user/src/ring_buffer.c ****   
+ 186:user/src/ring_buffer.c ****   if(rbd != NULL){
+ 110              		.loc 1 186 3 view .LVU30
+ 111              		.loc 1 186 5 is_stmt 0 view .LVU31
+ 112 0000 0346     		mov	r3, r0
+ 113 0002 40B1     		cbz	r0, .L6
+ 187:user/src/ring_buffer.c ****    if(rbd->count >= rbd->n_elem){
+ 114              		.loc 1 187 4 is_stmt 1 view .LVU32
+ 115              		.loc 1 187 10 is_stmt 0 view .LVU33
+ 116 0004 0169     		ldr	r1, [r0, #16]
+ 117              		.loc 1 187 24 view .LVU34
+ 118 0006 4268     		ldr	r2, [r0, #4]
+ 119              		.loc 1 187 6 view .LVU35
+ 120 0008 9142     		cmp	r1, r2
+ 121 000a 02D2     		bcs	.L8
+ 188:user/src/ring_buffer.c ****      status = RB_FULL;
+ 189:user/src/ring_buffer.c ****    }
+ 190:user/src/ring_buffer.c ****    else{
+ 191:user/src/ring_buffer.c ****      status = RB_OK;
+ 122              		.loc 1 191 13 view .LVU36
+ 123 000c 0020     		movs	r0, #0
+ 124              	.LVL6:
+ 125              	.L5:
+ 192:user/src/ring_buffer.c ****    }
+ 193:user/src/ring_buffer.c ****   }
+ 194:user/src/ring_buffer.c ****   
+ 195:user/src/ring_buffer.c ****   rbd->status = status;
+ 126              		.loc 1 195 3 is_stmt 1 view .LVU37
+ 127              		.loc 1 195 15 is_stmt 0 view .LVU38
+ 128 000e 1875     		strb	r0, [r3, #20]
+ 196:user/src/ring_buffer.c ****   return status;
+ 129              		.loc 1 196 3 is_stmt 1 view .LVU39
+ 197:user/src/ring_buffer.c **** }
+ 130              		.loc 1 197 1 is_stmt 0 view .LVU40
+ 131 0010 7047     		bx	lr
+ 132              	.LVL7:
+ 133              	.L8:
+ 188:user/src/ring_buffer.c ****    }
+ 134              		.loc 1 188 13 view .LVU41
+ 135 0012 0320     		movs	r0, #3
+ 136              	.LVL8:
+ 188:user/src/ring_buffer.c ****    }
+ 137              		.loc 1 188 13 view .LVU42
+ 138 0014 FBE7     		b	.L5
+ 139              	.LVL9:
+ 140              	.L6:
+ 184:user/src/ring_buffer.c ****   
+ 141              		.loc 1 184 15 view .LVU43
+ 142 0016 0120     		movs	r0, #1
+ 143              	.LVL10:
+ 184:user/src/ring_buffer.c ****   
+ 144              		.loc 1 184 15 view .LVU44
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccIis6zY.s 			page 7
+
+
+ 145 0018 F9E7     		b	.L5
+ 146              		.cfi_endproc
+ 147              	.LFE3:
+ 149              		.section	.text.ring_buffer_empty,"ax",%progbits
+ 150              		.align	1
+ 151              		.global	ring_buffer_empty
+ 152              		.syntax unified
+ 153              		.thumb
+ 154              		.thumb_func
+ 155              		.fpu softvfp
+ 157              	ring_buffer_empty:
+ 158              	.LVL11:
+ 159              	.LFB4:
+ 198:user/src/ring_buffer.c **** 
+ 199:user/src/ring_buffer.c **** /**
+ 200:user/src/ring_buffer.c ****  * @brief Check if ring buffer is empty
+ 201:user/src/ring_buffer.c ****  * @param *rbd - pointer to the ring buffer descriptor
+ 202:user/src/ring_buffer.c ****  * @return RB_EMPTY if empty, RB_OK if not, RB_ERROR if invalid parameters. 
+ 203:user/src/ring_buffer.c ****  */
+ 204:user/src/ring_buffer.c **** rb_status_t ring_buffer_empty(rb_att_t *rbd){
+ 160              		.loc 1 204 45 is_stmt 1 view -0
+ 161              		.cfi_startproc
+ 162              		@ args = 0, pretend = 0, frame = 0
+ 163              		@ frame_needed = 0, uses_anonymous_args = 0
+ 164              		@ link register save eliminated.
+ 205:user/src/ring_buffer.c ****   rb_status_t status = RB_ERROR;
+ 165              		.loc 1 205 3 view .LVU46
+ 206:user/src/ring_buffer.c ****   
+ 207:user/src/ring_buffer.c ****   if(rbd != NULL){
+ 166              		.loc 1 207 3 view .LVU47
+ 167              		.loc 1 207 5 is_stmt 0 view .LVU48
+ 168 0000 0346     		mov	r3, r0
+ 169 0002 30B1     		cbz	r0, .L11
+ 208:user/src/ring_buffer.c ****    if(rbd->count == 0){
+ 170              		.loc 1 208 4 is_stmt 1 view .LVU49
+ 171              		.loc 1 208 10 is_stmt 0 view .LVU50
+ 172 0004 0269     		ldr	r2, [r0, #16]
+ 173              		.loc 1 208 6 view .LVU51
+ 174 0006 12B1     		cbz	r2, .L13
+ 209:user/src/ring_buffer.c ****      status = RB_EMPTY;
+ 210:user/src/ring_buffer.c ****    }
+ 211:user/src/ring_buffer.c ****    else{
+ 212:user/src/ring_buffer.c ****      status = RB_OK;
+ 175              		.loc 1 212 13 view .LVU52
+ 176 0008 0020     		movs	r0, #0
+ 177              	.LVL12:
+ 178              	.L10:
+ 213:user/src/ring_buffer.c ****    }
+ 214:user/src/ring_buffer.c ****   }
+ 215:user/src/ring_buffer.c ****   
+ 216:user/src/ring_buffer.c ****   rbd->status = status;
+ 179              		.loc 1 216 3 is_stmt 1 view .LVU53
+ 180              		.loc 1 216 15 is_stmt 0 view .LVU54
+ 181 000a 1875     		strb	r0, [r3, #20]
+ 217:user/src/ring_buffer.c ****   return status;
+ 182              		.loc 1 217 3 is_stmt 1 view .LVU55
+ 218:user/src/ring_buffer.c **** }
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccIis6zY.s 			page 8
+
+
+ 183              		.loc 1 218 1 is_stmt 0 view .LVU56
+ 184 000c 7047     		bx	lr
+ 185              	.LVL13:
+ 186              	.L13:
+ 209:user/src/ring_buffer.c ****    }
+ 187              		.loc 1 209 13 view .LVU57
+ 188 000e 0220     		movs	r0, #2
+ 189              	.LVL14:
+ 209:user/src/ring_buffer.c ****    }
+ 190              		.loc 1 209 13 view .LVU58
+ 191 0010 FBE7     		b	.L10
+ 192              	.LVL15:
+ 193              	.L11:
+ 205:user/src/ring_buffer.c ****   
+ 194              		.loc 1 205 15 view .LVU59
+ 195 0012 0120     		movs	r0, #1
+ 196              	.LVL16:
+ 205:user/src/ring_buffer.c ****   
+ 197              		.loc 1 205 15 view .LVU60
+ 198 0014 F9E7     		b	.L10
+ 199              		.cfi_endproc
+ 200              	.LFE4:
+ 202              		.section	.text.ring_buffer_free_elements,"ax",%progbits
+ 203              		.align	1
+ 204              		.global	ring_buffer_free_elements
+ 205              		.syntax unified
+ 206              		.thumb
+ 207              		.thumb_func
+ 208              		.fpu softvfp
+ 210              	ring_buffer_free_elements:
+ 211              	.LVL17:
+ 212              	.LFB5:
+ 219:user/src/ring_buffer.c **** 
+ 220:user/src/ring_buffer.c **** /**
+ 221:user/src/ring_buffer.c ****  * @brief Check how many elements can be written to the buffer
+ 222:user/src/ring_buffer.c ****  * @param *rbd - pointer to the ring buffer descriptor
+ 223:user/src/ring_buffer.c ****  * @return 0 on invalid parameter, number of elements otherwise
+ 224:user/src/ring_buffer.c ****  */
+ 225:user/src/ring_buffer.c **** uint32_t ring_buffer_free_elements(rb_att_t *rbd){
+ 213              		.loc 1 225 50 is_stmt 1 view -0
+ 214              		.cfi_startproc
+ 215              		@ args = 0, pretend = 0, frame = 0
+ 216              		@ frame_needed = 0, uses_anonymous_args = 0
+ 217              		@ link register save eliminated.
+ 226:user/src/ring_buffer.c ****   uint32_t ret_val = 0;
+ 218              		.loc 1 226 3 view .LVU62
+ 227:user/src/ring_buffer.c ****   
+ 228:user/src/ring_buffer.c ****   if(rbd != NULL){  // rbd must not be a pointer to nowhere
+ 219              		.loc 1 228 3 view .LVU63
+ 220              		.loc 1 228 5 is_stmt 0 view .LVU64
+ 221 0000 0346     		mov	r3, r0
+ 222 0002 18B1     		cbz	r0, .L16
+ 229:user/src/ring_buffer.c ****    ret_val = rbd->n_elem - rbd->count;
+ 223              		.loc 1 229 4 is_stmt 1 view .LVU65
+ 224              		.loc 1 229 17 is_stmt 0 view .LVU66
+ 225 0004 4068     		ldr	r0, [r0, #4]
+ 226              	.LVL18:
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccIis6zY.s 			page 9
+
+
+ 227              		.loc 1 229 31 view .LVU67
+ 228 0006 1B69     		ldr	r3, [r3, #16]
+ 229              	.LVL19:
+ 230              		.loc 1 229 12 view .LVU68
+ 231 0008 C01A     		subs	r0, r0, r3
+ 232              	.LVL20:
+ 233              		.loc 1 229 12 view .LVU69
+ 234 000a 7047     		bx	lr
+ 235              	.LVL21:
+ 236              	.L16:
+ 226:user/src/ring_buffer.c ****   uint32_t ret_val = 0;
+ 237              		.loc 1 226 12 view .LVU70
+ 238 000c 0020     		movs	r0, #0
+ 239              	.LVL22:
+ 230:user/src/ring_buffer.c ****   }
+ 231:user/src/ring_buffer.c ****   
+ 232:user/src/ring_buffer.c ****   return ret_val;
+ 240              		.loc 1 232 3 is_stmt 1 view .LVU71
+ 233:user/src/ring_buffer.c **** }
+ 241              		.loc 1 233 1 is_stmt 0 view .LVU72
+ 242 000e 7047     		bx	lr
+ 243              		.cfi_endproc
+ 244              	.LFE5:
+ 246              		.section	.text.ring_buffer_put,"ax",%progbits
+ 247              		.align	1
+ 248              		.global	ring_buffer_put
+ 249              		.syntax unified
+ 250              		.thumb
+ 251              		.thumb_func
+ 252              		.fpu softvfp
+ 254              	ring_buffer_put:
+ 255              	.LVL23:
+ 256              	.LFB1:
+ 101:user/src/ring_buffer.c ****   rb_status_t status = RB_ERROR;
+ 257              		.loc 1 101 72 is_stmt 1 view -0
+ 258              		.cfi_startproc
+ 259              		@ args = 0, pretend = 0, frame = 0
+ 260              		@ frame_needed = 0, uses_anonymous_args = 0
+ 101:user/src/ring_buffer.c ****   rb_status_t status = RB_ERROR;
+ 261              		.loc 1 101 72 is_stmt 0 view .LVU74
+ 262 0000 2DE9F843 		push	{r3, r4, r5, r6, r7, r8, r9, lr}
+ 263              	.LCFI1:
+ 264              		.cfi_def_cfa_offset 32
+ 265              		.cfi_offset 3, -32
+ 266              		.cfi_offset 4, -28
+ 267              		.cfi_offset 5, -24
+ 268              		.cfi_offset 6, -20
+ 269              		.cfi_offset 7, -16
+ 270              		.cfi_offset 8, -12
+ 271              		.cfi_offset 9, -8
+ 272              		.cfi_offset 14, -4
+ 102:user/src/ring_buffer.c ****   uint32_t num_to_end = 0; // number of elements to the last buffer element (including current one 
+ 273              		.loc 1 102 3 is_stmt 1 view .LVU75
+ 274              	.LVL24:
+ 103:user/src/ring_buffer.c ****   
+ 275              		.loc 1 103 3 view .LVU76
+ 105:user/src/ring_buffer.c ****     if(ring_buffer_free_elements(rbd) >= num){  // is there enough space in buffer for num of data
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccIis6zY.s 			page 10
+
+
+ 276              		.loc 1 105 3 view .LVU77
+ 105:user/src/ring_buffer.c ****     if(ring_buffer_free_elements(rbd) >= num){  // is there enough space in buffer for num of data
+ 277              		.loc 1 105 5 is_stmt 0 view .LVU78
+ 278 0004 0446     		mov	r4, r0
+ 279 0006 0028     		cmp	r0, #0
+ 280 0008 37D0     		beq	.L21
+ 281 000a 0F46     		mov	r7, r1
+ 282 000c 1546     		mov	r5, r2
+ 106:user/src/ring_buffer.c ****       if(rbd->head >= rbd->n_elem){ // reset ring buffer head
+ 283              		.loc 1 106 5 is_stmt 1 view .LVU79
+ 106:user/src/ring_buffer.c ****       if(rbd->head >= rbd->n_elem){ // reset ring buffer head
+ 284              		.loc 1 106 8 is_stmt 0 view .LVU80
+ 285 000e FFF7FEFF 		bl	ring_buffer_free_elements
+ 286              	.LVL25:
+ 106:user/src/ring_buffer.c ****       if(rbd->head >= rbd->n_elem){ // reset ring buffer head
+ 287              		.loc 1 106 7 view .LVU81
+ 288 0012 A842     		cmp	r0, r5
+ 289 0014 35D3     		bcc	.L22
+ 107:user/src/ring_buffer.c ****         rbd->head = 0;
+ 290              		.loc 1 107 7 is_stmt 1 view .LVU82
+ 107:user/src/ring_buffer.c ****         rbd->head = 0;
+ 291              		.loc 1 107 13 is_stmt 0 view .LVU83
+ 292 0016 A268     		ldr	r2, [r4, #8]
+ 107:user/src/ring_buffer.c ****         rbd->head = 0;
+ 293              		.loc 1 107 26 view .LVU84
+ 294 0018 6368     		ldr	r3, [r4, #4]
+ 107:user/src/ring_buffer.c ****         rbd->head = 0;
+ 295              		.loc 1 107 9 view .LVU85
+ 296 001a 9A42     		cmp	r2, r3
+ 297 001c 01D3     		bcc	.L19
+ 108:user/src/ring_buffer.c ****       }
+ 298              		.loc 1 108 9 is_stmt 1 view .LVU86
+ 108:user/src/ring_buffer.c ****       }
+ 299              		.loc 1 108 19 is_stmt 0 view .LVU87
+ 300 001e 0023     		movs	r3, #0
+ 301 0020 A360     		str	r3, [r4, #8]
+ 302              	.L19:
+ 111:user/src/ring_buffer.c ****       if(num_to_end < num){ // if there is not enough space for "num" of data before reaching buffe
+ 303              		.loc 1 111 7 is_stmt 1 view .LVU88
+ 111:user/src/ring_buffer.c ****       if(num_to_end < num){ // if there is not enough space for "num" of data before reaching buffe
+ 304              		.loc 1 111 23 is_stmt 0 view .LVU89
+ 305 0022 D4F80490 		ldr	r9, [r4, #4]
+ 111:user/src/ring_buffer.c ****       if(num_to_end < num){ // if there is not enough space for "num" of data before reaching buffe
+ 306              		.loc 1 111 37 view .LVU90
+ 307 0026 A668     		ldr	r6, [r4, #8]
+ 111:user/src/ring_buffer.c ****       if(num_to_end < num){ // if there is not enough space for "num" of data before reaching buffe
+ 308              		.loc 1 111 18 view .LVU91
+ 309 0028 A9EB0608 		sub	r8, r9, r6
+ 310              	.LVL26:
+ 112:user/src/ring_buffer.c ****         memcpy(&(rbd->buff[rbd->head]), data, num_to_end); //write to buffer partial data
+ 311              		.loc 1 112 7 is_stmt 1 view .LVU92
+ 112:user/src/ring_buffer.c ****         memcpy(&(rbd->buff[rbd->head]), data, num_to_end); //write to buffer partial data
+ 312              		.loc 1 112 9 is_stmt 0 view .LVU93
+ 313 002c 4545     		cmp	r5, r8
+ 314 002e 15D9     		bls	.L20
+ 113:user/src/ring_buffer.c ****         memcpy(rbd->buff, (data + num_to_end), (num - num_to_end)); //write to buffer rest of the d
+ 315              		.loc 1 113 9 is_stmt 1 view .LVU94
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccIis6zY.s 			page 11
+
+
+ 113:user/src/ring_buffer.c ****         memcpy(rbd->buff, (data + num_to_end), (num - num_to_end)); //write to buffer rest of the d
+ 316              		.loc 1 113 21 is_stmt 0 view .LVU95
+ 317 0030 2068     		ldr	r0, [r4]
+ 113:user/src/ring_buffer.c ****         memcpy(rbd->buff, (data + num_to_end), (num - num_to_end)); //write to buffer rest of the d
+ 318              		.loc 1 113 31 view .LVU96
+ 319 0032 A368     		ldr	r3, [r4, #8]
+ 113:user/src/ring_buffer.c ****         memcpy(rbd->buff, (data + num_to_end), (num - num_to_end)); //write to buffer rest of the d
+ 320              		.loc 1 113 9 view .LVU97
+ 321 0034 4246     		mov	r2, r8
+ 322 0036 3946     		mov	r1, r7
+ 323 0038 1844     		add	r0, r0, r3
+ 324 003a FFF7FEFF 		bl	memcpy
+ 325              	.LVL27:
+ 114:user/src/ring_buffer.c ****         
+ 326              		.loc 1 114 9 is_stmt 1 view .LVU98
+ 114:user/src/ring_buffer.c ****         
+ 327              		.loc 1 114 19 is_stmt 0 view .LVU99
+ 328 003e 2068     		ldr	r0, [r4]
+ 114:user/src/ring_buffer.c ****         
+ 329              		.loc 1 114 53 view .LVU100
+ 330 0040 A6EB0906 		sub	r6, r6, r9
+ 331 0044 2E44     		add	r6, r6, r5
+ 114:user/src/ring_buffer.c ****         
+ 332              		.loc 1 114 9 view .LVU101
+ 333 0046 3246     		mov	r2, r6
+ 334 0048 07EB0801 		add	r1, r7, r8
+ 335 004c FFF7FEFF 		bl	memcpy
+ 336              	.LVL28:
+ 116:user/src/ring_buffer.c ****         rbd->count = rbd->count + num; // increment counter for num of data
+ 337              		.loc 1 116 9 is_stmt 1 view .LVU102
+ 116:user/src/ring_buffer.c ****         rbd->count = rbd->count + num; // increment counter for num of data
+ 338              		.loc 1 116 19 is_stmt 0 view .LVU103
+ 339 0050 A660     		str	r6, [r4, #8]
+ 117:user/src/ring_buffer.c ****       }
+ 340              		.loc 1 117 9 is_stmt 1 view .LVU104
+ 117:user/src/ring_buffer.c ****       }
+ 341              		.loc 1 117 25 is_stmt 0 view .LVU105
+ 342 0052 2369     		ldr	r3, [r4, #16]
+ 117:user/src/ring_buffer.c ****       }
+ 343              		.loc 1 117 33 view .LVU106
+ 344 0054 1D44     		add	r5, r5, r3
+ 345              	.LVL29:
+ 117:user/src/ring_buffer.c ****       }
+ 346              		.loc 1 117 20 view .LVU107
+ 347 0056 2561     		str	r5, [r4, #16]
+ 126:user/src/ring_buffer.c ****     }
+ 348              		.loc 1 126 14 view .LVU108
+ 349 0058 0020     		movs	r0, #0
+ 350 005a 0FE0     		b	.L18
+ 351              	.LVL30:
+ 352              	.L20:
+ 120:user/src/ring_buffer.c ****         
+ 353              		.loc 1 120 9 is_stmt 1 view .LVU109
+ 120:user/src/ring_buffer.c ****         
+ 354              		.loc 1 120 21 is_stmt 0 view .LVU110
+ 355 005c 2068     		ldr	r0, [r4]
+ 120:user/src/ring_buffer.c ****         
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccIis6zY.s 			page 12
+
+
+ 356              		.loc 1 120 31 view .LVU111
+ 357 005e A368     		ldr	r3, [r4, #8]
+ 120:user/src/ring_buffer.c ****         
+ 358              		.loc 1 120 9 view .LVU112
+ 359 0060 2A46     		mov	r2, r5
+ 360 0062 3946     		mov	r1, r7
+ 361 0064 1844     		add	r0, r0, r3
+ 362 0066 FFF7FEFF 		bl	memcpy
+ 363              	.LVL31:
+ 122:user/src/ring_buffer.c ****         rbd->count = rbd->count + num; // increment counter for num of data
+ 364              		.loc 1 122 9 is_stmt 1 view .LVU113
+ 122:user/src/ring_buffer.c ****         rbd->count = rbd->count + num; // increment counter for num of data
+ 365              		.loc 1 122 24 is_stmt 0 view .LVU114
+ 366 006a A368     		ldr	r3, [r4, #8]
+ 122:user/src/ring_buffer.c ****         rbd->count = rbd->count + num; // increment counter for num of data
+ 367              		.loc 1 122 31 view .LVU115
+ 368 006c 2B44     		add	r3, r3, r5
+ 122:user/src/ring_buffer.c ****         rbd->count = rbd->count + num; // increment counter for num of data
+ 369              		.loc 1 122 19 view .LVU116
+ 370 006e A360     		str	r3, [r4, #8]
+ 123:user/src/ring_buffer.c ****       }
+ 371              		.loc 1 123 9 is_stmt 1 view .LVU117
+ 123:user/src/ring_buffer.c ****       }
+ 372              		.loc 1 123 25 is_stmt 0 view .LVU118
+ 373 0070 2369     		ldr	r3, [r4, #16]
+ 123:user/src/ring_buffer.c ****       }
+ 374              		.loc 1 123 33 view .LVU119
+ 375 0072 1D44     		add	r5, r5, r3
+ 376              	.LVL32:
+ 123:user/src/ring_buffer.c ****       }
+ 377              		.loc 1 123 20 view .LVU120
+ 378 0074 2561     		str	r5, [r4, #16]
+ 126:user/src/ring_buffer.c ****     }
+ 379              		.loc 1 126 14 view .LVU121
+ 380 0076 0020     		movs	r0, #0
+ 381 0078 00E0     		b	.L18
+ 382              	.LVL33:
+ 383              	.L21:
+ 102:user/src/ring_buffer.c ****   uint32_t num_to_end = 0; // number of elements to the last buffer element (including current one 
+ 384              		.loc 1 102 15 view .LVU122
+ 385 007a 0120     		movs	r0, #1
+ 386              	.LVL34:
+ 387              	.L18:
+ 132:user/src/ring_buffer.c ****   return status;
+ 388              		.loc 1 132 3 is_stmt 1 view .LVU123
+ 132:user/src/ring_buffer.c ****   return status;
+ 389              		.loc 1 132 15 is_stmt 0 view .LVU124
+ 390 007c 2075     		strb	r0, [r4, #20]
+ 133:user/src/ring_buffer.c **** }
+ 391              		.loc 1 133 3 is_stmt 1 view .LVU125
+ 134:user/src/ring_buffer.c **** 
+ 392              		.loc 1 134 1 is_stmt 0 view .LVU126
+ 393 007e BDE8F883 		pop	{r3, r4, r5, r6, r7, r8, r9, pc}
+ 394              	.LVL35:
+ 395              	.L22:
+ 129:user/src/ring_buffer.c ****     }
+ 396              		.loc 1 129 14 view .LVU127
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccIis6zY.s 			page 13
+
+
+ 397 0082 0420     		movs	r0, #4
+ 398 0084 FAE7     		b	.L18
+ 399              		.cfi_endproc
+ 400              	.LFE1:
+ 402              		.section	.text.ring_buffer_size,"ax",%progbits
+ 403              		.align	1
+ 404              		.global	ring_buffer_size
+ 405              		.syntax unified
+ 406              		.thumb
+ 407              		.thumb_func
+ 408              		.fpu softvfp
+ 410              	ring_buffer_size:
+ 411              	.LVL36:
+ 412              	.LFB6:
+ 234:user/src/ring_buffer.c **** 
+ 235:user/src/ring_buffer.c **** /**
+ 236:user/src/ring_buffer.c ****  * @brief Get the number of bytes stored in ring buffer
+ 237:user/src/ring_buffer.c ****  * @param *rbd - pointer to the ring buffer descriptor
+ 238:user/src/ring_buffer.c ****  * @return 0 if invalid parameters, number of data stored in buffer otherwise
+ 239:user/src/ring_buffer.c ****  */
+ 240:user/src/ring_buffer.c **** uint32_t ring_buffer_size(rb_att_t *rbd){
+ 413              		.loc 1 240 41 is_stmt 1 view -0
+ 414              		.cfi_startproc
+ 415              		@ args = 0, pretend = 0, frame = 0
+ 416              		@ frame_needed = 0, uses_anonymous_args = 0
+ 417              		@ link register save eliminated.
+ 241:user/src/ring_buffer.c ****   uint32_t size = 0;
+ 418              		.loc 1 241 3 view .LVU129
+ 242:user/src/ring_buffer.c ****   
+ 243:user/src/ring_buffer.c ****   if(rbd != NULL){  // rbd must not be a pointer to nowhere
+ 419              		.loc 1 243 3 view .LVU130
+ 420              		.loc 1 243 5 is_stmt 0 view .LVU131
+ 421 0000 08B1     		cbz	r0, .L26
+ 244:user/src/ring_buffer.c ****     size = rbd->count;
+ 422              		.loc 1 244 5 is_stmt 1 view .LVU132
+ 423              		.loc 1 244 10 is_stmt 0 view .LVU133
+ 424 0002 0069     		ldr	r0, [r0, #16]
+ 425              	.LVL37:
+ 426              		.loc 1 244 10 view .LVU134
+ 427 0004 7047     		bx	lr
+ 428              	.LVL38:
+ 429              	.L26:
+ 241:user/src/ring_buffer.c ****   uint32_t size = 0;
+ 430              		.loc 1 241 12 view .LVU135
+ 431 0006 0020     		movs	r0, #0
+ 432              	.LVL39:
+ 245:user/src/ring_buffer.c ****   }
+ 246:user/src/ring_buffer.c ****   
+ 247:user/src/ring_buffer.c ****   return size;
+ 433              		.loc 1 247 3 is_stmt 1 view .LVU136
+ 248:user/src/ring_buffer.c **** }
+ 434              		.loc 1 248 1 is_stmt 0 view .LVU137
+ 435 0008 7047     		bx	lr
+ 436              		.cfi_endproc
+ 437              	.LFE6:
+ 439              		.section	.text.ring_buffer_get,"ax",%progbits
+ 440              		.align	1
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccIis6zY.s 			page 14
+
+
+ 441              		.global	ring_buffer_get
+ 442              		.syntax unified
+ 443              		.thumb
+ 444              		.thumb_func
+ 445              		.fpu softvfp
+ 447              	ring_buffer_get:
+ 448              	.LVL40:
+ 449              	.LFB2:
+ 143:user/src/ring_buffer.c ****   rb_status_t status = RB_ERROR;
+ 450              		.loc 1 143 72 is_stmt 1 view -0
+ 451              		.cfi_startproc
+ 452              		@ args = 0, pretend = 0, frame = 0
+ 453              		@ frame_needed = 0, uses_anonymous_args = 0
+ 143:user/src/ring_buffer.c ****   rb_status_t status = RB_ERROR;
+ 454              		.loc 1 143 72 is_stmt 0 view .LVU139
+ 455 0000 2DE9F843 		push	{r3, r4, r5, r6, r7, r8, r9, lr}
+ 456              	.LCFI2:
+ 457              		.cfi_def_cfa_offset 32
+ 458              		.cfi_offset 3, -32
+ 459              		.cfi_offset 4, -28
+ 460              		.cfi_offset 5, -24
+ 461              		.cfi_offset 6, -20
+ 462              		.cfi_offset 7, -16
+ 463              		.cfi_offset 8, -12
+ 464              		.cfi_offset 9, -8
+ 465              		.cfi_offset 14, -4
+ 144:user/src/ring_buffer.c ****   uint32_t num_to_end = 0;
+ 466              		.loc 1 144 3 is_stmt 1 view .LVU140
+ 467              	.LVL41:
+ 145:user/src/ring_buffer.c ****   
+ 468              		.loc 1 145 3 view .LVU141
+ 147:user/src/ring_buffer.c ****     if(ring_buffer_size(rbd) >= num){ //buffer is not empty and there is at least num of data store
+ 469              		.loc 1 147 3 view .LVU142
+ 147:user/src/ring_buffer.c ****     if(ring_buffer_size(rbd) >= num){ //buffer is not empty and there is at least num of data store
+ 470              		.loc 1 147 5 is_stmt 0 view .LVU143
+ 471 0004 0446     		mov	r4, r0
+ 472 0006 0028     		cmp	r0, #0
+ 473 0008 37D0     		beq	.L31
+ 474 000a 0F46     		mov	r7, r1
+ 475 000c 1546     		mov	r5, r2
+ 148:user/src/ring_buffer.c ****       if(rbd->tail >= rbd->n_elem){ // reset ring buffer tail
+ 476              		.loc 1 148 5 is_stmt 1 view .LVU144
+ 148:user/src/ring_buffer.c ****       if(rbd->tail >= rbd->n_elem){ // reset ring buffer tail
+ 477              		.loc 1 148 8 is_stmt 0 view .LVU145
+ 478 000e FFF7FEFF 		bl	ring_buffer_size
+ 479              	.LVL42:
+ 148:user/src/ring_buffer.c ****       if(rbd->tail >= rbd->n_elem){ // reset ring buffer tail
+ 480              		.loc 1 148 7 view .LVU146
+ 481 0012 A842     		cmp	r0, r5
+ 482 0014 35D3     		bcc	.L32
+ 149:user/src/ring_buffer.c ****         rbd->tail = 0;
+ 483              		.loc 1 149 7 is_stmt 1 view .LVU147
+ 149:user/src/ring_buffer.c ****         rbd->tail = 0;
+ 484              		.loc 1 149 13 is_stmt 0 view .LVU148
+ 485 0016 E268     		ldr	r2, [r4, #12]
+ 149:user/src/ring_buffer.c ****         rbd->tail = 0;
+ 486              		.loc 1 149 26 view .LVU149
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccIis6zY.s 			page 15
+
+
+ 487 0018 6368     		ldr	r3, [r4, #4]
+ 149:user/src/ring_buffer.c ****         rbd->tail = 0;
+ 488              		.loc 1 149 9 view .LVU150
+ 489 001a 9A42     		cmp	r2, r3
+ 490 001c 01D3     		bcc	.L29
+ 150:user/src/ring_buffer.c ****       }
+ 491              		.loc 1 150 9 is_stmt 1 view .LVU151
+ 150:user/src/ring_buffer.c ****       }
+ 492              		.loc 1 150 19 is_stmt 0 view .LVU152
+ 493 001e 0023     		movs	r3, #0
+ 494 0020 E360     		str	r3, [r4, #12]
+ 495              	.L29:
+ 153:user/src/ring_buffer.c ****       if(num >= num_to_end){ // is there enough ("num") of data to read before reaching buffer last
+ 496              		.loc 1 153 7 is_stmt 1 view .LVU153
+ 153:user/src/ring_buffer.c ****       if(num >= num_to_end){ // is there enough ("num") of data to read before reaching buffer last
+ 497              		.loc 1 153 23 is_stmt 0 view .LVU154
+ 498 0022 D4F80490 		ldr	r9, [r4, #4]
+ 153:user/src/ring_buffer.c ****       if(num >= num_to_end){ // is there enough ("num") of data to read before reaching buffer last
+ 499              		.loc 1 153 37 view .LVU155
+ 500 0026 E668     		ldr	r6, [r4, #12]
+ 153:user/src/ring_buffer.c ****       if(num >= num_to_end){ // is there enough ("num") of data to read before reaching buffer last
+ 501              		.loc 1 153 18 view .LVU156
+ 502 0028 A9EB0608 		sub	r8, r9, r6
+ 503              	.LVL43:
+ 154:user/src/ring_buffer.c ****         memcpy(data, &(rbd->buff[rbd->tail]), num_to_end); //read from buffer partial data
+ 504              		.loc 1 154 7 is_stmt 1 view .LVU157
+ 154:user/src/ring_buffer.c ****         memcpy(data, &(rbd->buff[rbd->tail]), num_to_end); //read from buffer partial data
+ 505              		.loc 1 154 9 is_stmt 0 view .LVU158
+ 506 002c 4545     		cmp	r5, r8
+ 507 002e 15D3     		bcc	.L30
+ 155:user/src/ring_buffer.c ****         memcpy(data + num_to_end, rbd->buff, (num - num_to_end)); //read from buffer remaining part
+ 508              		.loc 1 155 9 is_stmt 1 view .LVU159
+ 155:user/src/ring_buffer.c ****         memcpy(data + num_to_end, rbd->buff, (num - num_to_end)); //read from buffer remaining part
+ 509              		.loc 1 155 27 is_stmt 0 view .LVU160
+ 510 0030 2168     		ldr	r1, [r4]
+ 155:user/src/ring_buffer.c ****         memcpy(data + num_to_end, rbd->buff, (num - num_to_end)); //read from buffer remaining part
+ 511              		.loc 1 155 37 view .LVU161
+ 512 0032 E368     		ldr	r3, [r4, #12]
+ 155:user/src/ring_buffer.c ****         memcpy(data + num_to_end, rbd->buff, (num - num_to_end)); //read from buffer remaining part
+ 513              		.loc 1 155 9 view .LVU162
+ 514 0034 4246     		mov	r2, r8
+ 515 0036 1944     		add	r1, r1, r3
+ 516 0038 3846     		mov	r0, r7
+ 517 003a FFF7FEFF 		bl	memcpy
+ 518              	.LVL44:
+ 156:user/src/ring_buffer.c ****           
+ 519              		.loc 1 156 9 is_stmt 1 view .LVU163
+ 156:user/src/ring_buffer.c ****           
+ 520              		.loc 1 156 38 is_stmt 0 view .LVU164
+ 521 003e 2168     		ldr	r1, [r4]
+ 156:user/src/ring_buffer.c ****           
+ 522              		.loc 1 156 51 view .LVU165
+ 523 0040 A6EB0906 		sub	r6, r6, r9
+ 524 0044 2E44     		add	r6, r6, r5
+ 156:user/src/ring_buffer.c ****           
+ 525              		.loc 1 156 9 view .LVU166
+ 526 0046 3246     		mov	r2, r6
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccIis6zY.s 			page 16
+
+
+ 527 0048 07EB0800 		add	r0, r7, r8
+ 528 004c FFF7FEFF 		bl	memcpy
+ 529              	.LVL45:
+ 158:user/src/ring_buffer.c ****         rbd->count = rbd->count - num; // decrement counter for num of data
+ 530              		.loc 1 158 9 is_stmt 1 view .LVU167
+ 158:user/src/ring_buffer.c ****         rbd->count = rbd->count - num; // decrement counter for num of data
+ 531              		.loc 1 158 19 is_stmt 0 view .LVU168
+ 532 0050 E660     		str	r6, [r4, #12]
+ 159:user/src/ring_buffer.c ****       }
+ 533              		.loc 1 159 9 is_stmt 1 view .LVU169
+ 159:user/src/ring_buffer.c ****       }
+ 534              		.loc 1 159 25 is_stmt 0 view .LVU170
+ 535 0052 2369     		ldr	r3, [r4, #16]
+ 159:user/src/ring_buffer.c ****       }
+ 536              		.loc 1 159 33 view .LVU171
+ 537 0054 5D1B     		subs	r5, r3, r5
+ 538              	.LVL46:
+ 159:user/src/ring_buffer.c ****       }
+ 539              		.loc 1 159 20 view .LVU172
+ 540 0056 2561     		str	r5, [r4, #16]
+ 167:user/src/ring_buffer.c ****     }
+ 541              		.loc 1 167 14 view .LVU173
+ 542 0058 0020     		movs	r0, #0
+ 543 005a 0FE0     		b	.L28
+ 544              	.LVL47:
+ 545              	.L30:
+ 162:user/src/ring_buffer.c ****         
+ 546              		.loc 1 162 9 is_stmt 1 view .LVU174
+ 162:user/src/ring_buffer.c ****         
+ 547              		.loc 1 162 27 is_stmt 0 view .LVU175
+ 548 005c 2168     		ldr	r1, [r4]
+ 162:user/src/ring_buffer.c ****         
+ 549              		.loc 1 162 37 view .LVU176
+ 550 005e E368     		ldr	r3, [r4, #12]
+ 162:user/src/ring_buffer.c ****         
+ 551              		.loc 1 162 9 view .LVU177
+ 552 0060 2A46     		mov	r2, r5
+ 553 0062 1944     		add	r1, r1, r3
+ 554 0064 3846     		mov	r0, r7
+ 555 0066 FFF7FEFF 		bl	memcpy
+ 556              	.LVL48:
+ 164:user/src/ring_buffer.c ****         rbd->count = rbd->count - num; // decrement counter for num of data
+ 557              		.loc 1 164 9 is_stmt 1 view .LVU178
+ 164:user/src/ring_buffer.c ****         rbd->count = rbd->count - num; // decrement counter for num of data
+ 558              		.loc 1 164 24 is_stmt 0 view .LVU179
+ 559 006a E368     		ldr	r3, [r4, #12]
+ 164:user/src/ring_buffer.c ****         rbd->count = rbd->count - num; // decrement counter for num of data
+ 560              		.loc 1 164 31 view .LVU180
+ 561 006c 2B44     		add	r3, r3, r5
+ 164:user/src/ring_buffer.c ****         rbd->count = rbd->count - num; // decrement counter for num of data
+ 562              		.loc 1 164 19 view .LVU181
+ 563 006e E360     		str	r3, [r4, #12]
+ 165:user/src/ring_buffer.c ****       }
+ 564              		.loc 1 165 9 is_stmt 1 view .LVU182
+ 165:user/src/ring_buffer.c ****       }
+ 565              		.loc 1 165 25 is_stmt 0 view .LVU183
+ 566 0070 2369     		ldr	r3, [r4, #16]
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccIis6zY.s 			page 17
+
+
+ 165:user/src/ring_buffer.c ****       }
+ 567              		.loc 1 165 33 view .LVU184
+ 568 0072 5D1B     		subs	r5, r3, r5
+ 569              	.LVL49:
+ 165:user/src/ring_buffer.c ****       }
+ 570              		.loc 1 165 20 view .LVU185
+ 571 0074 2561     		str	r5, [r4, #16]
+ 167:user/src/ring_buffer.c ****     }
+ 572              		.loc 1 167 14 view .LVU186
+ 573 0076 0020     		movs	r0, #0
+ 574 0078 00E0     		b	.L28
+ 575              	.LVL50:
+ 576              	.L31:
+ 144:user/src/ring_buffer.c ****   uint32_t num_to_end = 0;
+ 577              		.loc 1 144 15 view .LVU187
+ 578 007a 0120     		movs	r0, #1
+ 579              	.LVL51:
+ 580              	.L28:
+ 174:user/src/ring_buffer.c ****   return status;
+ 581              		.loc 1 174 3 is_stmt 1 view .LVU188
+ 174:user/src/ring_buffer.c ****   return status;
+ 582              		.loc 1 174 15 is_stmt 0 view .LVU189
+ 583 007c 2075     		strb	r0, [r4, #20]
+ 175:user/src/ring_buffer.c **** }
+ 584              		.loc 1 175 3 is_stmt 1 view .LVU190
+ 176:user/src/ring_buffer.c **** 
+ 585              		.loc 1 176 1 is_stmt 0 view .LVU191
+ 586 007e BDE8F883 		pop	{r3, r4, r5, r6, r7, r8, r9, pc}
+ 587              	.LVL52:
+ 588              	.L32:
+ 170:user/src/ring_buffer.c ****     }
+ 589              		.loc 1 170 14 view .LVU192
+ 590 0082 0520     		movs	r0, #5
+ 591 0084 FAE7     		b	.L28
+ 592              		.cfi_endproc
+ 593              	.LFE2:
+ 595              		.section	.text.ring_buffer_flush,"ax",%progbits
+ 596              		.align	1
+ 597              		.global	ring_buffer_flush
+ 598              		.syntax unified
+ 599              		.thumb
+ 600              		.thumb_func
+ 601              		.fpu softvfp
+ 603              	ring_buffer_flush:
+ 604              	.LVL53:
+ 605              	.LFB7:
+ 249:user/src/ring_buffer.c **** 
+ 250:user/src/ring_buffer.c **** /**
+ 251:user/src/ring_buffer.c ****  * @brief Flush data from ring buffer (discard head, tail and count data)
+ 252:user/src/ring_buffer.c ****  * @param *rbd - pointer to the ring buffer descriptor
+ 253:user/src/ring_buffer.c ****  */
+ 254:user/src/ring_buffer.c **** void ring_buffer_flush(rb_att_t *rbd){
+ 606              		.loc 1 254 38 is_stmt 1 view -0
+ 607              		.cfi_startproc
+ 608              		@ args = 0, pretend = 0, frame = 0
+ 609              		@ frame_needed = 0, uses_anonymous_args = 0
+ 610              		.loc 1 254 38 is_stmt 0 view .LVU194
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccIis6zY.s 			page 18
+
+
+ 611 0000 08B5     		push	{r3, lr}
+ 612              	.LCFI3:
+ 613              		.cfi_def_cfa_offset 8
+ 614              		.cfi_offset 3, -8
+ 615              		.cfi_offset 14, -4
+ 616 0002 0346     		mov	r3, r0
+ 255:user/src/ring_buffer.c ****   rbd->head = 0;
+ 617              		.loc 1 255 3 is_stmt 1 view .LVU195
+ 618              		.loc 1 255 13 is_stmt 0 view .LVU196
+ 619 0004 0021     		movs	r1, #0
+ 620 0006 8160     		str	r1, [r0, #8]
+ 256:user/src/ring_buffer.c ****   rbd->tail = 0;
+ 621              		.loc 1 256 3 is_stmt 1 view .LVU197
+ 622              		.loc 1 256 13 is_stmt 0 view .LVU198
+ 623 0008 C160     		str	r1, [r0, #12]
+ 257:user/src/ring_buffer.c ****   rbd->count = 0;
+ 624              		.loc 1 257 3 is_stmt 1 view .LVU199
+ 625              		.loc 1 257 14 is_stmt 0 view .LVU200
+ 626 000a 0161     		str	r1, [r0, #16]
+ 258:user/src/ring_buffer.c ****   
+ 259:user/src/ring_buffer.c ****   memset(rbd->buff, 0, rbd->n_elem);  // set all values back to 0.
+ 627              		.loc 1 259 3 is_stmt 1 view .LVU201
+ 628              		.loc 1 259 13 is_stmt 0 view .LVU202
+ 629 000c 0068     		ldr	r0, [r0]
+ 630              	.LVL54:
+ 631              		.loc 1 259 27 view .LVU203
+ 632 000e 5A68     		ldr	r2, [r3, #4]
+ 633              		.loc 1 259 3 view .LVU204
+ 634 0010 FFF7FEFF 		bl	memset
+ 635              	.LVL55:
+ 260:user/src/ring_buffer.c **** }
+ 636              		.loc 1 260 1 view .LVU205
+ 637 0014 08BD     		pop	{r3, pc}
+ 638              		.cfi_endproc
+ 639              	.LFE7:
+ 641              		.section	.text.ring_buffer_get_status,"ax",%progbits
+ 642              		.align	1
+ 643              		.global	ring_buffer_get_status
+ 644              		.syntax unified
+ 645              		.thumb
+ 646              		.thumb_func
+ 647              		.fpu softvfp
+ 649              	ring_buffer_get_status:
+ 650              	.LVL56:
+ 651              	.LFB8:
+ 261:user/src/ring_buffer.c **** 
+ 262:user/src/ring_buffer.c **** /**
+ 263:user/src/ring_buffer.c ****  * @brief Get ring buffer current status
+ 264:user/src/ring_buffer.c ****  * @param *rbd - pointer to the ring buffer descriptor
+ 265:user/src/ring_buffer.c ****  */
+ 266:user/src/ring_buffer.c **** rb_status_t ring_buffer_get_status(rb_att_t *rbd){
+ 652              		.loc 1 266 50 is_stmt 1 view -0
+ 653              		.cfi_startproc
+ 654              		@ args = 0, pretend = 0, frame = 0
+ 655              		@ frame_needed = 0, uses_anonymous_args = 0
+ 656              		@ link register save eliminated.
+ 267:user/src/ring_buffer.c ****   return rbd->status;
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccIis6zY.s 			page 19
+
+
+ 657              		.loc 1 267 3 view .LVU207
+ 658              		.loc 1 267 13 is_stmt 0 view .LVU208
+ 659 0000 007D     		ldrb	r0, [r0, #20]	@ zero_extendqisi2
+ 660              	.LVL57:
+ 268:user/src/ring_buffer.c **** }
+ 661              		.loc 1 268 1 view .LVU209
+ 662 0002 7047     		bx	lr
+ 663              		.cfi_endproc
+ 664              	.LFE8:
+ 666              		.section	.text.ring_buffer_send_data,"ax",%progbits
+ 667              		.align	1
+ 668              		.global	ring_buffer_send_data
+ 669              		.syntax unified
+ 670              		.thumb
+ 671              		.thumb_func
+ 672              		.fpu softvfp
+ 674              	ring_buffer_send_data:
+ 675              	.LVL58:
+ 676              	.LFB9:
+ 269:user/src/ring_buffer.c **** 
+ 270:user/src/ring_buffer.c **** /**
+ 271:user/src/ring_buffer.c ****  * @brief User function to print out buffer details
+ 272:user/src/ring_buffer.c ****  * @param *rbd - pointer to the ring buffer descriptor
+ 273:user/src/ring_buffer.c ****  */
+ 274:user/src/ring_buffer.c **** //#include "comm.h"
+ 275:user/src/ring_buffer.c **** void ring_buffer_send_data(rb_att_t *rbd){
+ 677              		.loc 1 275 42 is_stmt 1 view -0
+ 678              		.cfi_startproc
+ 679              		@ args = 0, pretend = 0, frame = 0
+ 680              		@ frame_needed = 0, uses_anonymous_args = 0
+ 681              		@ link register save eliminated.
+ 276:user/src/ring_buffer.c ****   //send_data(CU_TO_PC, rbd->buff);
+ 277:user/src/ring_buffer.c **** }
+ 682              		.loc 1 277 1 view .LVU211
+ 683 0000 7047     		bx	lr
+ 684              		.cfi_endproc
+ 685              	.LFE9:
+ 687              		.text
+ 688              	.Letext0:
+ 689              		.file 2 "c:\\users\\domen\\appdata\\roaming\\gnu mcu eclipse\\arm embedded gcc\\8.3.1-1.1\\arm-non
+ 690              		.file 3 "c:\\users\\domen\\appdata\\roaming\\gnu mcu eclipse\\arm embedded gcc\\8.3.1-1.1\\arm-non
+ 691              		.file 4 "user/inc/ring_buffer.h"
+ 692              		.file 5 "c:\\users\\domen\\appdata\\roaming\\gnu mcu eclipse\\arm embedded gcc\\8.3.1-1.1\\lib\\gc
+ 693              		.file 6 "c:\\users\\domen\\appdata\\roaming\\gnu mcu eclipse\\arm embedded gcc\\8.3.1-1.1\\arm-non
+ 694              		.file 7 "c:\\users\\domen\\appdata\\roaming\\gnu mcu eclipse\\arm embedded gcc\\8.3.1-1.1\\arm-non
+ 695              		.file 8 "c:\\users\\domen\\appdata\\roaming\\gnu mcu eclipse\\arm embedded gcc\\8.3.1-1.1\\arm-non
+ 696              		.file 9 "c:\\users\\domen\\appdata\\roaming\\gnu mcu eclipse\\arm embedded gcc\\8.3.1-1.1\\arm-non
+ 697              		.file 10 "<built-in>"
+ARM GAS  C:\Users\domen\AppData\Local\Temp\ccIis6zY.s 			page 20
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 ring_buffer.c
+C:\Users\domen\AppData\Local\Temp\ccIis6zY.s:16     .text.ring_buffer_init:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccIis6zY.s:24     .text.ring_buffer_init:0000000000000000 ring_buffer_init
+C:\Users\domen\AppData\Local\Temp\ccIis6zY.s:94     .text.ring_buffer_full:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccIis6zY.s:101    .text.ring_buffer_full:0000000000000000 ring_buffer_full
+C:\Users\domen\AppData\Local\Temp\ccIis6zY.s:150    .text.ring_buffer_empty:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccIis6zY.s:157    .text.ring_buffer_empty:0000000000000000 ring_buffer_empty
+C:\Users\domen\AppData\Local\Temp\ccIis6zY.s:203    .text.ring_buffer_free_elements:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccIis6zY.s:210    .text.ring_buffer_free_elements:0000000000000000 ring_buffer_free_elements
+C:\Users\domen\AppData\Local\Temp\ccIis6zY.s:247    .text.ring_buffer_put:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccIis6zY.s:254    .text.ring_buffer_put:0000000000000000 ring_buffer_put
+C:\Users\domen\AppData\Local\Temp\ccIis6zY.s:403    .text.ring_buffer_size:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccIis6zY.s:410    .text.ring_buffer_size:0000000000000000 ring_buffer_size
+C:\Users\domen\AppData\Local\Temp\ccIis6zY.s:440    .text.ring_buffer_get:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccIis6zY.s:447    .text.ring_buffer_get:0000000000000000 ring_buffer_get
+C:\Users\domen\AppData\Local\Temp\ccIis6zY.s:596    .text.ring_buffer_flush:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccIis6zY.s:603    .text.ring_buffer_flush:0000000000000000 ring_buffer_flush
+C:\Users\domen\AppData\Local\Temp\ccIis6zY.s:642    .text.ring_buffer_get_status:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccIis6zY.s:649    .text.ring_buffer_get_status:0000000000000000 ring_buffer_get_status
+C:\Users\domen\AppData\Local\Temp\ccIis6zY.s:667    .text.ring_buffer_send_data:0000000000000000 $t
+C:\Users\domen\AppData\Local\Temp\ccIis6zY.s:674    .text.ring_buffer_send_data:0000000000000000 ring_buffer_send_data
+
+UNDEFINED SYMBOLS
+calloc
+memcpy
+memset

@@ -1,0 +1,25 @@
+{
+    "folders": [
+        {
+            "path": "."
+        }
+    ],
+    "settings": {
+        "cortex-debug.armToolchainPath": "C:/Users/domen/AppData/Roaming/GNU MCU Eclipse/ARM Embedded GCC/8.3.1-1.1/bin",
+        "cortex-debug.openocdPath": "C:/Users/domen/AppData/Roaming/GNU MCU Eclipse/OpenOCD/0.10.0-12-20190422-2015/bin/openocd.exe",
+        "files.associations": {
+            "io.h": "c",
+            "main.h": "c",
+            "timers.h": "c",
+            "stm32l1xx.h": "c",
+            "uart_io.h": "c",
+            "uart_print_dma.h": "c",
+            "uart_print_user.h": "c",
+            "mfd_io.h": "c",
+            "stm32l1xx_hal_gpio.h": "c",
+            "stm32l1xx_hal.h": "c",
+            "stm32l1xx_ll_gpio.h": "c",
+            "stm32l1xx_it.h": "c"
+        }
+    }
+}

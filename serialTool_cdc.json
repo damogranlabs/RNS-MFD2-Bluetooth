@@ -1,0 +1,44 @@
+{
+    "version": 2.0,
+    "serialSettings": {
+        "port": "COM5",
+        "baudrate": 115200,
+        "dataSize": 8,
+        "stopbits": 1,
+        "parity": "N",
+        "swFlowControl": false,
+        "hwFlowControl": false,
+        "readTimeoutMs": 300,
+        "writeTimeoutMs": 300
+    },
+    "dataFields": {
+        "0": "\"L\"; \"r\"; 0; 0",
+        "1": "\"L\"; \"g\"; 0; 0",
+        "2": "\"L\"; \"b\"; 0; 0",
+        "3": "\"R\"; \"O\"; \"S\"; 0;",
+        "4": "\"R\"; \"O\"; \"X\"; 0;",
+        "5": "\"R\"; \"I\"; \"S\"; 0;",
+        "6": "\"R\"; \"I\"; \"X\"; 0;",
+        "7": "\"R\"; \"E\"; 0; 0;"
+    },
+    "noteFields": {
+        "0": "Toggle red LED (external, error)",
+        "1": "Toggle green LED",
+        "2": "Toggle blue LED",
+        "3": "MFD: START DOUT",
+        "4": "MFD: STOP DOUT",
+        "5": "MFD: START DIN RX",
+        "6": "MFD: STOP DIN RX",
+        "7": "SPI 1 byte"
+    },
+    "sequenceFields": {
+        "0": "",
+        "1": "",
+        "2": ""
+    },
+    "rxToLog": true,
+    "txToLog": false,
+    "outputDataRepresentation": 0,
+    "newLineOnRxData": true,
+    "newLineOnRxTimeout": 10
+}
