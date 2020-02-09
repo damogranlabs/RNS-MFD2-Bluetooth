@@ -13,6 +13,6 @@ Exports (.sr -> .data -> .txt) files are post analysis of recorded data for easi
 **NOTE:** do not take exports and my comments as an absolute true facts. Instead, see the code and Damogran Labs blog post for more info.
 
 # Screenshots
-![RNS MFD2 Bluetooth in action](images/IMG_1198.jpg)  
-![STM32L100-Discovery + Bluetooth base board](images/IMG_1201.jpg)  
-![STM32L100-Discovery + Bluetooth base board](images/IMG_1203.jpg)  
+![RNS MFD2 Bluetooth in action](images/hw/IMG_1198.jpg)  
+![STM32L100-Discovery + Bluetooth base board](images/hw/IMG_1201.jpg)  
+![STM32L100-Discovery + Bluetooth base board](images/hw/IMG_1203.jpg)  
