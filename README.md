@@ -1,6 +1,6 @@
 # RNS-MFD2-Bluetooth
 RNS MFD2 Bluetooth CD Changer emulator based on STM32L100 + KCX_BT002  
-Damogran Labs: (https://damogranlabs.com/?p=2000)[https://damogranlabs.com/?p=2000]  
+Damogran Labs: [https://damogranlabs.com/2020/02/rns-mfd2-bluetooth-cd-changer-emulator](https://damogranlabs.com/2020/02/rns-mfd2-bluetooth-cd-changer-emulator/)  
 Author: Domen Jurkovic, Feb 2020
 
 # Firmware
